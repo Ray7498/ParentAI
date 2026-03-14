@@ -40,6 +40,16 @@ export default function Dashboard() {
   const [showEmail, setShowEmail] = useState(false);
   const [emailTo, setEmailTo] = useState(""); const [emailSubj, setEmailSubj] = useState(""); const [emailBody, setEmailBody] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle"|"sending"|"sent"|"error">("idle");
+  const [selectedLink, setSelectedLink] = useState<Link | null>(null);
+  const [calendarView, setCalendarView] = useState(new Date());
+
+  const deleteMeetingMutation = useMutation({
+    mutationFn: (id: number) => axios.delete(`${API}/meetings/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard-full"] });
+      setSelectedMeeting(null);
+    },
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-full", user?.app_user_id],
@@ -110,6 +120,26 @@ export default function Dashboard() {
     );
   }
 
+  // --- Calendar Logic ---
+  const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const getCalendarDays = () => {
+    const total = daysInMonth(calendarView);
+    const start = firstDayOfMonth(calendarView);
+    const arr = [];
+    for (let i = 0; i < start; i++) arr.push(null);
+    for (let i = 1; i <= total; i++) arr.push(i);
+    return arr;
+  };
+
+  const getDayContent = (day: number | null) => {
+    if (!day) return [];
+    const dateStr = `${calendarView.getFullYear()}-${String(calendarView.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const mtgs = data?.meetings?.filter(m => m.date.startsWith(dateStr)) || [];
+    const evts = data?.events?.filter(e => e.date.startsWith(dateStr)) || [];
+    return [...mtgs.map(m => ({ ...m, type: 'meeting' })), ...evts.map(e => ({ ...e, type: 'event' }))];
+  };
+
   return (
     <div className="page-bg" style={{ padding: "32px 36px", position: "relative", zIndex: 1 }}>
       {/* Top Bar */}
@@ -172,41 +202,45 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* 3-Column Layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 1fr", gap: "24px", alignItems: "start" }}>
+      {/* Main Content Area */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         
-        {/* Left Column: Timetable */}
-        <div className="glass-card animate-fade-up delay-1" style={{ overflow: "hidden" }}>
-          <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", background: "var(--violet-dim)", display: "flex", alignItems: "center", gap: "10px" }}>
-            <CalendarDays size={16} className="text-violet" />
-            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--violet)", letterSpacing: "0.02em" }}>DAILY TIMETABLE</span>
-          </div>
-          <div style={{ padding: "8px 0" }}>
-            {data?.timetable?.map((slot, i) => (
-              <div key={slot.id} style={{ 
-                padding: "14px 20px", 
-                borderBottom: i === data.timetable.length - 1 ? "none" : "1px solid var(--border)",
-                display: "flex", gap: "16px", transition: "background 0.2s"
-              }} className="hover:bg-muted/30">
-                <div style={{ minWidth: "55px", fontSize: "0.75rem", fontWeight: 700, color: "var(--muted-foreground)", paddingTop: "2px" }}>
-                  {slot.time}
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)" }}>{slot.subject}</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
-                    {slot.teacher} • Room {slot.room}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Center Column: Homework & Agenda */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        {/* Top Grid (3 columns) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 1fr", gap: "24px", alignItems: "start" }}>
           
-          {/* Homework Tracker */}
-          <div className="glass-card animate-fade-up delay-2">
+          {/* Left Column: Timetable */}
+          <div className="glass-card animate-fade-up delay-1" style={{ overflow: "hidden", height: "100%" }}>
+            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", background: "var(--violet-dim)", display: "flex", alignItems: "center", gap: "10px" }}>
+              <CalendarDays size={16} className="text-violet" />
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--violet)", letterSpacing: "0.02em" }}>DAILY TIMETABLE</span>
+            </div>
+            <div style={{ padding: "8px 0" }}>
+              {data?.timetable?.length === 0 ? (
+                <p style={{ padding: "20px", fontSize: "0.8rem", color: "var(--muted-foreground)", textAlign: "center" }}>No classes today.</p>
+              ) : (
+                data?.timetable?.map((slot, i) => (
+                  <div key={slot.id} style={{ 
+                    padding: "14px 20px", 
+                    borderBottom: i === data.timetable.length - 1 ? "none" : "1px solid var(--border)",
+                    display: "flex", gap: "16px", transition: "background 0.2s"
+                  }} className="hover:bg-muted/30">
+                    <div style={{ minWidth: "55px", fontSize: "0.75rem", fontWeight: 700, color: "var(--muted-foreground)", paddingTop: "2px" }}>
+                      {slot.time}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)" }}>{slot.subject}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
+                        {slot.teacher} • Room {slot.room}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Center Column: Homework Tracker */}
+          <div className="glass-card animate-fade-up delay-2" style={{ height: "100%" }}>
             <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <CheckSquare size={16} className="text-teal" />
@@ -216,144 +250,168 @@ export default function Dashboard() {
                 {data?.homework?.filter(h => !h.is_completed).length} Pending
               </span>
             </div>
-            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
-              {data?.homework?.map(hw => (
-                <div key={hw.id} style={{ 
-                  padding: "16px", borderRadius: "12px", background: "var(--input)",
-                  border: "1px solid var(--border)", display: "flex", gap: "14px",
-                  opacity: hw.is_completed ? 0.6 : 1, transition: "all 0.2s"
-                }}>
-                  <button 
-                    onClick={() => toggleHomeworkMutation.mutate(hw)}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: hw.is_completed ? "var(--teal)" : "var(--muted-foreground)", paddingTop: "2px" }}
-                  >
-                    {hw.is_completed ? <CheckCircle2 size={18} /> : <Square size={18} />}
-                  </button>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)", textDecoration: hw.is_completed ? "line-through" : "none" }}>
-                        {hw.subject}
-                      </span>
-                      <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--rose)" }}>
-                        Due {new Date(hw.due_date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>{hw.description}</p>
-                    <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-                      <span style={{ fontSize: "0.65rem", padding: "2px 8px", background: "var(--card)", borderRadius: "100px", color: "var(--muted-foreground)", border: "1px solid var(--border)" }}>
-                        {hw.submission_type}
-                      </span>
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {data?.homework?.length === 0 ? (
+                <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", textAlign: "center", margin: "20px 0" }}>Enjoy your day! No homework pending.</p>
+              ) : (
+                data?.homework?.map(hw => (
+                  <div key={hw.id} style={{ 
+                    padding: "14px", borderRadius: "12px", background: "var(--input)",
+                    border: "1px solid var(--border)", display: "flex", gap: "14px",
+                    opacity: hw.is_completed ? 0.6 : 1, transition: "all 0.2s"
+                  }}>
+                    <button 
+                      onClick={() => toggleHomeworkMutation.mutate(hw)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: hw.is_completed ? "var(--teal)" : "var(--muted-foreground)", paddingTop: "2px" }}
+                    >
+                      {hw.is_completed ? <CheckCircle2 size={18} /> : <Square size={18} />}
+                    </button>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)", textDecoration: hw.is_completed ? "line-through" : "none" }}>
+                          {hw.subject}
+                        </span>
+                        <span style={{ fontSize: "0.65rem", fontWeight: 600, color: "var(--rose)" }}>
+                          {new Date(hw.due_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>{hw.description}</p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          {/* Agenda / Upcoming Meetings */}
-          <div className="glass-card animate-fade-up delay-3">
-            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
-              <Clock size={16} className="text-gold" />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.02em" }}>AGENDA & APPOINTMENTS</span>
-            </div>
-            <div style={{ padding: "20px" }}>
-               {scheduled.length === 0 ? (
-                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", textAlign: "center", margin: "20px 0" }}>No appointments scheduled.</p>
-               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  {scheduled.map(m => (
-                    <button key={m.id} onClick={() => setSelectedMeeting(m)} style={{
-                      padding: "16px", borderRadius: "12px", background: "var(--input)",
-                      border: "1px solid var(--border)", textAlign: "left", cursor: "pointer",
-                      transition: "all 0.2s"
-                    }} className="hover:border-gold/30">
-                      <div style={{ fontSize: "0.65rem", color: "var(--gold)", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase" }}>Meeting</div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)" }}>{m.teacher_name}</div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "4px" }}>
-                        {new Date(m.date).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </div>
-                    </button>
+          {/* Right Column: Resources & Performance */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div className="glass-card animate-fade-up delay-4">
+              <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
+                <TrendingUp size={16} className="text-violet" />
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--violet)", letterSpacing: "0.02em" }}>GRADES OVERVIEW</span>
+              </div>
+              <div style={{ padding: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  {data?.grades?.map(g => (
+                    <div key={g.id} style={{ padding: "10px", background: "var(--input)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{g.subject}</span>
+                      <span className={getGradeClass(g.score)} style={{ fontSize: "0.8rem", fontWeight: 700 }}>{g.score}</span>
+                    </div>
                   ))}
                 </div>
-               )}
+              </div>
+            </div>
+
+            <div className="glass-card animate-fade-up delay-5">
+              <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
+                <ExternalLink size={16} className="text-emerald" />
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--emerald)", letterSpacing: "0.02em" }}>SCHOOL RESOURCES</span>
+              </div>
+              <div style={{ padding: "10px" }}>
+                {data?.links?.map(link => (
+                  <button key={link.id} onClick={() => setSelectedLink(link)} style={{ 
+                    width: "100%", border: "none", background: "none", textAlign: "left",
+                    display: "flex", alignItems: "center", gap: "12px", padding: "10px",
+                    borderRadius: "10px", cursor: "pointer", transition: "background 0.2s"
+                  }} className="hover:bg-muted/50">
+                    <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "var(--emerald)", opacity: 0.1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--emerald)", flexShrink: 0 }}>
+                      <BookOpen size={14} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--foreground)" }}>{link.title}</div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>Check details</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Links, Surveys & Grades */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          
-          {/* Grades Summary */}
-          <div className="glass-card animate-fade-up delay-4">
-            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
-              <TrendingUp size={16} className="text-violet" />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--violet)", letterSpacing: "0.02em" }}>PERFORMANCE OVERVIEW</span>
+        {/* Full Width Calendar Row */}
+        <div className="glass-card animate-fade-up delay-6" style={{ overflow: "hidden" }}>
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <CalendarDays size={18} className="text-violet" />
+              <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--foreground)", letterSpacing: "0.01em" }}>PERSONAL & SCHOOL CALENDAR</span>
             </div>
-            <div style={{ padding: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                {data?.grades?.map(g => (
-                  <div key={g.id} style={{ padding: "12px", background: "var(--input)", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{g.subject}</span>
-                    <span className={getGradeClass(g.score)} style={{ fontSize: "0.85rem" }}>{g.score}</span>
-                  </div>
-                ))}
-              </div>
-              <button style={{ width: "100%", marginTop: "16px", padding: "10px", borderRadius: "10px", border: "1px solid var(--border)", background: "transparent", fontSize: "0.75rem", color: "var(--muted-foreground)", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                View Full Gradebook <ChevronRight size={14} />
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <button 
+                onClick={() => setCalendarView(new Date(calendarView.getFullYear(), calendarView.getMonth() - 1))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--foreground)" }}
+              >
+                <X size={16} /> {/* Should be ChevronLeft */}
+              </button>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--foreground)", minWidth: "120px", textAlign: "center" }}>
+                {calendarView.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </span>
+              <button 
+                onClick={() => setCalendarView(new Date(calendarView.getFullYear(), calendarView.getMonth() + 1))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--foreground)" }}
+              >
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
-
-          {/* Useful Links */}
-          <div className="glass-card animate-fade-up delay-5">
-            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
-              <ExternalLink size={16} className="text-emerald" />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--emerald)", letterSpacing: "0.02em" }}>USEFUL RESOURCES</span>
-            </div>
-            <div style={{ padding: "12px" }}>
-              {data?.links?.map(link => (
-                <a key={link.id} href={link.url} target="_blank" style={{ 
-                  display: "flex", alignItems: "center", gap: "12px", padding: "12px",
-                  borderRadius: "10px", textDecoration: "none", transition: "background 0.2s"
-                }} className="hover:bg-muted/50">
-                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--emerald)", opacity: 0.1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--emerald)", flexShrink: 0 }}>
-                    <BookOpen size={16} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--foreground)" }}>{link.title}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>{link.description}</div>
-                  </div>
-                </a>
+          
+          <div style={{ padding: "0" }}>
+            {/* Days Header */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", background: "var(--violet-dim)", borderBottom: "1px solid var(--border)" }}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <div key={d} style={{ padding: "10px", textAlign: "center", fontSize: "0.65rem", fontWeight: 700, color: "var(--violet)", textTransform: "uppercase" }}>{d}</div>
               ))}
             </div>
-          </div>
-
-          {/* Information & Surveys */}
-          <div className="glass-card animate-fade-up delay-6" style={{ background: "linear-gradient(135deg, var(--card) 0%, var(--gold) 500%)" }}>
-            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px" }}>
-              <ClipboardList size={16} className="text-gold" />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.02em" }}>SURVEYS & INFO</span>
+            {/* Calendar Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "var(--border)" }}>
+              {getCalendarDays().map((day, i) => {
+                const dayContent = getDayContent(day);
+                const isToday = day === new Date().getDate() && calendarView.getMonth() === new Date().getMonth();
+                return (
+                  <div key={i} style={{ 
+                    minHeight: "120px", background: "var(--card)", padding: "10px",
+                    display: "flex", flexDirection: "column", gap: "4px"
+                  }}>
+                    {day && (
+                      <div style={{ 
+                        fontSize: "0.8rem", fontWeight: isToday ? 800 : 500, 
+                        color: isToday ? "var(--violet)" : "var(--foreground)",
+                        display: "flex", justifyContent: "space-between", alignItems: "center"
+                      }}>
+                        {day}
+                        {isToday && <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "var(--violet)" }} />}
+                      </div>
+                    )}
+                    {dayContent.map((item: any) => (
+                      <button 
+                        key={item.id + item.type}
+                        onClick={() => item.type === 'meeting' ? setSelectedMeeting(item) : setSelectedEvent(item)}
+                        style={{ 
+                          padding: "4px 8px", borderRadius: "6px", fontSize: "0.65rem", textAlign: "left",
+                          background: item.type === 'meeting' ? 'var(--gold)' : 'var(--violet-dim)',
+                          color: item.type === 'meeting' ? '#000' : 'var(--violet)',
+                          border: "none", cursor: "pointer", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"
+                        }}
+                      >
+                        {item.type === 'meeting' ? `Meeting: ${item.teacher_name}` : item.title}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ padding: "20px" }}>
-              {data?.surveys?.map(survey => (
-                <div key={survey.id} style={{ marginBottom: "16px" }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--foreground)", marginBottom: "4px" }}>{survey.title}</div>
-                  <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, marginBottom: "10px" }}>{survey.description}</p>
-                  <button className="btn-primary" style={{ padding: "6px 14px", fontSize: "0.75rem", background: "var(--gold)", color: "#000", boxShadow: "none" }}>Respond</button>
-                </div>
-              ))}
-            </div>
           </div>
-
         </div>
+
       </div>
 
-      {/* Existing Modals */}
+      {/* --- Modals --- */}
+      
+      {/* Meeting Modal */}
       <Dialog open={!!selectedMeeting} onOpenChange={() => setSelectedMeeting(null)}>
         <DialogContent style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", maxWidth: "420px" }}>
           <DialogHeader>
             <DialogTitle style={{ color: "var(--foreground)", fontSize: "1.1rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-              <User size={18} className="text-teal" /> Meeting Details
+              <User size={18} className="text-gold" /> Meeting Details
             </DialogTitle>
           </DialogHeader>
           {selectedMeeting && (
@@ -371,13 +429,76 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setShowEmail(true); setSelectedMeeting(null); }} style={{
-                display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", borderRadius: "10px",
-                background: "var(--violet-dim)", border: "1px solid var(--violet)",
-                color: "var(--violet)", cursor: "pointer", fontSize: "0.84rem", fontWeight: 500, transition: "all 0.15s", justifyContent: "center",
-              }}>
-                <Mail size={14} /> Email This Teacher
-              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button onClick={() => { setShowEmail(true); setSelectedMeeting(null); }} style={{
+                  flex: 1, display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderRadius: "10px",
+                  background: "var(--violet-dim)", border: "1px solid var(--violet)", color: "var(--violet)", 
+                  cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, justifyContent: "center",
+                }}>
+                  <Mail size={14} /> Email Teacher
+                </button>
+                <button 
+                  onClick={() => deleteMeetingMutation.mutate(selectedMeeting.id)}
+                  disabled={deleteMeetingMutation.isPending}
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: "10px", background: "var(--input)", border: "1px solid var(--destructive)", color: "var(--destructive)",
+                    cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
+                  }}>
+                  {deleteMeetingMutation.isPending ? "Deleting..." : "Delete Meeting"}
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Resource Link Modal */}
+      <Dialog open={!!selectedLink} onOpenChange={() => setSelectedLink(null)}>
+        <DialogContent style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", maxWidth: "480px" }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: "var(--foreground)", fontSize: "1.1rem", fontWeight: 700 }}>
+              {selectedLink?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedLink && (
+            <div style={{ padding: "4px 0" }}>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)", marginBottom: "20px" }}>{selectedLink.description}</p>
+              
+              {selectedLink.title.includes("Menu") ? (
+                <div style={{ background: "var(--input)", padding: "16px", borderRadius: "12px" }}>
+                  <h4 className="section-label" style={{ marginBottom: "12px" }}>Weekly Menu Highlights</h4>
+                  {[
+                    { day: "Monday", meal: "Spaghetti Bolognese, Fresh Salad" },
+                    { day: "Tuesday", meal: "Roasted Chicken w/ Vegetables" },
+                    { day: "Wednesday", meal: "Vegetarian Lasagna" },
+                  ].map(m => (
+                    <div key={m.day} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "8px" }}>
+                      <span style={{ fontWeight: 600 }}>{m.day}</span>
+                      <span style={{ color: "var(--muted-foreground)" }}>{m.meal}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : selectedLink.title.includes("Calendar") ? (
+                <div style={{ background: "var(--input)", padding: "16px", borderRadius: "12px" }}>
+                  <h4 className="section-label" style={{ marginBottom: "12px" }}>Upcoming School Events</h4>
+                  {data?.events?.slice(0, 3).map(e => (
+                    <div key={e.id} style={{ marginBottom: "10px" }}>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>{e.title}</div>
+                      <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{new Date(e.date).toLocaleDateString()} • {e.location}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ background: "var(--input)", padding: "16px", borderRadius: "12px" }}>
+                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Select a categorized library to browse books, research papers, and digital publications available to students.</p>
+                </div>
+              )}
+
+              <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+                <a href={selectedLink.url} target="_blank" className="btn-primary" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+                  Open Full portal <ExternalLink size={14} />
+                </a>
+              </div>
             </div>
           )}
         </DialogContent>

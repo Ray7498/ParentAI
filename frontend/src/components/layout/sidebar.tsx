@@ -29,8 +29,8 @@ export function Sidebar() {
     <div
       style={{
         width: "240px",
-        background: "linear-gradient(180deg, #080810 0%, #09090f 100%)",
-        borderRight: "1px solid rgba(255,255,255,0.05)",
+        background: "var(--sidebar)",
+        borderRight: "1px solid var(--sidebar-border)",
         display: "flex",
         flexDirection: "column",
         height: "100%",
@@ -38,33 +38,34 @@ export function Sidebar() {
         position: "relative",
         overflow: "hidden",
         flexShrink: 0,
+        zIndex: 10,
       }}
     >
       {/* Ambient glow */}
       <div style={{
         position: "absolute", top: "-60px", left: "-60px",
         width: "200px", height: "200px",
-        background: "radial-gradient(circle, rgba(124,107,255,0.08) 0%, transparent 70%)",
+        background: `radial-gradient(circle, ${theme === 'dark' ? 'rgba(124,107,255,0.08)' : 'rgba(124,107,255,0.05)'} 0%, transparent 70%)`,
         pointerEvents: "none",
       }} />
 
       {/* Logo */}
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid var(--sidebar-border)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{
             width: "36px", height: "36px",
             background: "linear-gradient(135deg, #7c6bff 0%, #6c5ce7 100%)",
-            borderRadius: "10px",
+            borderRadius: "100%",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(124,107,255,0.35)",
+            boxShadow: theme === 'dark' ? "0 4px 12px rgba(124,107,255,0.35)" : "0 2px 8px rgba(124,107,255,0.2)",
           }}>
             <GraduationCap size={18} color="white" />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "0.9rem", letterSpacing: "-0.02em", color: "#e8e8f0" }}>
+            <div style={{ fontWeight: 700, fontSize: "0.9rem", letterSpacing: "-0.02em", color: "var(--sidebar-foreground)" }}>
               ParentMentor
             </div>
-            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>
+            <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", letterSpacing: "0.05em", opacity: 0.7 }}>
               AI-POWERED
             </div>
           </div>
@@ -72,7 +73,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+      <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px", position: "relative", zIndex: 1 }}>
         <div className="section-label" style={{ padding: "0 8px 8px" }}>Navigation</div>
         {routes.map((route) => {
           const isActive = pathname === route.href;
@@ -88,6 +89,7 @@ export function Sidebar() {
                 fontSize: "0.845rem", fontWeight: isActive ? 600 : 400,
                 textDecoration: "none", transition: "all 0.15s ease",
                 letterSpacing: "-0.01em",
+                border: isActive ? "1px solid var(--primary-glow)" : "1px solid transparent",
               }}
             >
               <Icon size={16} style={{ opacity: isActive ? 1 : 0.6 }} />
@@ -96,8 +98,8 @@ export function Sidebar() {
                 <div style={{
                   marginLeft: "auto", width: "6px", height: "6px",
                   borderRadius: "100%",
-                  background: "#7c6bff",
-                  boxShadow: "0 0 8px rgba(124,107,255,0.8)",
+                  background: "var(--primary)",
+                  boxShadow: "0 0 8px var(--primary-glow)",
                 }} />
               )}
             </Link>
@@ -108,14 +110,16 @@ export function Sidebar() {
       {/* User footer */}
       <div style={{
         padding: "16px 12px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid var(--sidebar-border)",
+        position: "relative",
+        zIndex: 1,
       }}>
         {/* Avatar + name */}
         <div style={{
           display: "flex", alignItems: "center", gap: "10px",
           padding: "10px 12px", borderRadius: "10px",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "var(--background)",
+          border: "1px solid var(--sidebar-border)",
           marginBottom: "8px",
         }}>
           <div style={{
@@ -128,10 +132,10 @@ export function Sidebar() {
             {initials}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--sidebar-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {displayName}
             </div>
-            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.7 }}>
               {user?.email}
             </div>
           </div>
@@ -148,8 +152,8 @@ export function Sidebar() {
             transition: "all 0.15s ease", textAlign: "left", marginBottom: "4px"
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "var(--foreground)";
-            (e.currentTarget as HTMLElement).style.background = "var(--input)";
+            (e.currentTarget as HTMLElement).style.color = "var(--sidebar-foreground)";
+            (e.currentTarget as HTMLElement).style.background = "var(--sidebar-accent)";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.color = "var(--muted-foreground)";

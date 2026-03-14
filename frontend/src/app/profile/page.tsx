@@ -59,34 +59,34 @@ export default function ProfilePage() {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="page-bg" style={{ padding: "32px 36px", maxWidth: "760px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+    <div className="page-bg" style={{ padding: "32px 36px", maxWidth: "760px", margin: "0 auto", position: "relative", zIndex: 1, height: "100%", overflowY: "auto" }}>
       {/* Header */}
       <div className="animate-fade-up" style={{ marginBottom: "28px" }}>
         <p className="section-label" style={{ marginBottom: "6px" }}>Account</p>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.04em", color: "#e8e8f0" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--foreground)" }}>
           My <span className="gradient-text">Profile</span>
         </h1>
       </div>
 
       {/* Profile card */}
-      <div className="glass-card animate-fade-up delay-1" style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "20px" }}>
+      <div className="glass-card animate-fade-up delay-1" style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "20px", background: "var(--card)", border: "1px solid var(--border)" }}>
         {/* Banner */}
-        <div style={{ height: "90px", background: "linear-gradient(135deg, rgba(124,107,255,0.3) 0%, rgba(78,205,196,0.15) 100%)", position: "relative" }}>
-          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "200px", height: "200px", borderRadius: "100%", background: "radial-gradient(circle, rgba(124,107,255,0.15), transparent)", pointerEvents: "none" }} />
+        <div style={{ height: "90px", background: "linear-gradient(135deg, rgba(124,107,255,0.1) 0%, rgba(78,205,196,0.05) 100%)", position: "relative" }}>
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "200px", height: "200px", borderRadius: "100%", background: "radial-gradient(circle, rgba(124,107,255,0.1), transparent)", pointerEvents: "none" }} />
         </div>
 
         {/* Avatar + info */}
         <div style={{ padding: "0 24px 24px", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: "-28px", marginBottom: "16px" }}>
-            <div style={{ width: "64px", height: "64px", borderRadius: "100%", background: "linear-gradient(135deg, #7c6bff 0%, #4ecdc4 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: 700, color: "white", border: "3px solid #0f0f1a", flexShrink: 0 }}>
+            <div style={{ width: "64px", height: "64px", borderRadius: "100%", background: "linear-gradient(135deg, #7c6bff 0%, #4ecdc4 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: 700, color: "white", border: "3px solid var(--background)", flexShrink: 0, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
               {initials}
             </div>
             <button onClick={() => setEditing(e => !e)} style={{
               display: "flex", alignItems: "center", gap: "6px",
               padding: "7px 14px", borderRadius: "8px", cursor: "pointer",
-              background: editing ? "rgba(124,107,255,0.15)" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${editing ? "rgba(124,107,255,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: editing ? "#a598ff" : "rgba(232,232,240,0.6)",
+              background: editing ? "rgba(124,107,255,0.1)" : "var(--background)",
+              border: `1px solid ${editing ? "var(--primary-glow)" : "var(--border)"}`,
+              color: editing ? "var(--primary)" : "var(--muted-foreground)",
               fontSize: "0.78rem", fontWeight: 500, transition: "all 0.15s",
             }}>
               <Pencil size={12} /> {editing ? "Cancel" : "Edit Profile"}
@@ -94,10 +94,10 @@ export default function ProfilePage() {
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "-0.03em", color: "#e8e8f0", marginBottom: "2px" }}>{displayName}</h2>
-            <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.35)" }}>{user?.email}</p>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: "2px" }}>{displayName}</h2>
+            <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>{user?.email}</p>
             <div style={{ marginTop: "8px" }}>
-              <span style={{ padding: "3px 10px", borderRadius: "100px", background: "rgba(124,107,255,0.12)", border: "1px solid rgba(124,107,255,0.25)", fontSize: "0.7rem", fontWeight: 600, color: "#a598ff", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              <span style={{ padding: "3px 10px", borderRadius: "100px", background: "rgba(124,107,255,0.08)", border: "1px solid var(--primary-glow)", fontSize: "0.7rem", fontWeight: 600, color: "var(--primary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                 Parent
               </span>
             </div>
@@ -113,13 +113,13 @@ export default function ProfilePage() {
                 ].map((f, i) => (
                   <div key={i}>
                     <div className="section-label" style={{ marginBottom: "4px" }}>{f.label}</div>
-                    <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem" }} />
+                    <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
                   </div>
                 ))}
               </div>
               <div>
                 <div className="section-label" style={{ marginBottom: "4px" }}>Bio</div>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell the community about yourself…" rows={3} style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem", resize: "none" }} />
+                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell the community about yourself…" rows={3} style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem", resize: "none", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button onClick={() => { setSaveStatus("saving"); updateProfile.mutate(); }} disabled={saveStatus === "saving"} className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 20px" }}>
@@ -135,15 +135,15 @@ export default function ProfilePage() {
                 { label: "Age", value: age || "—" },
                 { label: "School", value: "Lincoln Elementary" },
               ].map((item, i) => (
-                <div key={i} style={{ padding: "12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <div key={i} style={{ padding: "12px", borderRadius: "10px", background: "var(--background)", border: "1px solid var(--border)", opacity: 0.8 }}>
                   <div className="section-label" style={{ marginBottom: "4px" }}>{item.label}</div>
-                  <div style={{ fontSize: "0.88rem", color: "#e8e8f0", fontWeight: 500 }}>{item.value}</div>
+                  <div style={{ fontSize: "0.88rem", color: "var(--foreground)", fontWeight: 500 }}>{item.value}</div>
                 </div>
               ))}
               {bio && (
-                <div style={{ gridColumn: "1 / -1", padding: "12px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ gridColumn: "1 / -1", padding: "12px", borderRadius: "10px", background: "var(--background)", border: "1px solid var(--border)", opacity: 0.8 }}>
                   <div className="section-label" style={{ marginBottom: "4px" }}>Bio</div>
-                  <p style={{ fontSize: "0.84rem", color: "rgba(232,232,240,0.65)", lineHeight: 1.6, margin: 0 }}>{bio}</p>
+                  <p style={{ fontSize: "0.84rem", color: "var(--muted-foreground)", lineHeight: 1.6, margin: 0 }}>{bio}</p>
                 </div>
               )}
             </div>
@@ -152,23 +152,23 @@ export default function ProfilePage() {
       </div>
 
       {/* Child info chip */}
-      <div className="glass-card animate-fade-up delay-2" style={{ borderRadius: "12px", padding: "14px 18px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(78,205,196,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="glass-card animate-fade-up delay-2" style={{ borderRadius: "12px", padding: "14px 18px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px", background: "var(--card)", border: "1px solid var(--border)" }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(78,205,196,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <User2 size={15} color="#4ecdc4" />
         </div>
         <div>
-          <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#e8e8f0" }}>Child's School</div>
-          <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)" }}>Linked from school records · Visit Dashboard to see current grades</div>
+          <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--foreground)" }}>Child's School</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Linked from school records · Visit Dashboard to see current grades</div>
         </div>
       </div>
 
       {/* User Search */}
-      <div className="glass-card animate-fade-up delay-3" style={{ borderRadius: "16px", padding: "20px" }}>
+      <div className="glass-card animate-fade-up delay-3" style={{ borderRadius: "16px", padding: "20px", background: "var(--card)", border: "1px solid var(--border)" }}>
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "0.95rem", fontWeight: 700, letterSpacing: "-0.02em", color: "#e8e8f0", display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <Search size={16} color="#7c6bff" /> Find Other Parents
+          <div style={{ fontSize: "0.95rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--foreground)", display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <Search size={16} color="var(--primary)" /> Find Other Parents
           </div>
-          <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)" }}>Connect and start private conversations</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Connect and start private conversations</div>
         </div>
         <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
           <input
@@ -176,7 +176,7 @@ export default function ProfilePage() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleSearch()}
-            style={{ flex: 1, padding: "9px 14px", fontSize: "0.84rem" }}
+            style={{ flex: 1, padding: "9px 14px", fontSize: "0.84rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
           />
           <button onClick={handleSearch} disabled={isSearching} className="btn-primary" style={{ padding: "9px 18px", fontSize: "0.84rem" }}>
             {isSearching ? "…" : "Search"}
@@ -188,20 +188,20 @@ export default function ProfilePage() {
             {searchResults.map(u => {
               const col = getColor(u.id);
               return (
-                <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ width: "36px", height: "36px", borderRadius: "100%", background: `${col}20`, border: `1.5px solid ${col}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.88rem", fontWeight: 700, color: col, flexShrink: 0 }}>
+                <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--background)", border: "1px solid var(--border)" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "100%", background: `${col}15`, border: `1.5px solid ${col}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.88rem", fontWeight: 700, color: col, flexShrink: 0 }}>
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#e8e8f0" }}>{u.name}</div>
-                    <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
+                    <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--foreground)" }}>{u.name}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
                   </div>
                   <Link href={`/messages?with=${u.id}&name=${encodeURIComponent(u.name)}`} style={{ textDecoration: "none" }}>
                     <button style={{
                       display: "flex", alignItems: "center", gap: "6px",
                       padding: "7px 14px", borderRadius: "8px",
-                      background: "rgba(124,107,255,0.1)", border: "1px solid rgba(124,107,255,0.22)",
-                      color: "#a598ff", fontSize: "0.78rem", fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+                      background: "rgba(124,107,255,0.1)", border: "1px solid var(--primary-glow)",
+                      color: "var(--primary)", fontSize: "0.78rem", fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
                     }}>
                       <MessageSquare size={12} /> Message
                     </button>
@@ -211,7 +211,7 @@ export default function ProfilePage() {
             })}
           </div>
         ) : searchQuery && !isSearching ? (
-          <div style={{ textAlign: "center", padding: "16px", color: "rgba(255,255,255,0.25)", fontSize: "0.82rem" }}>
+          <div style={{ textAlign: "center", padding: "16px", color: "var(--muted-foreground)", fontSize: "0.82rem", opacity: 0.6 }}>
             No parents found for "{searchQuery}"
           </div>
         ) : null}

@@ -37,32 +37,32 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: number }
     <div className="glass-card animate-fade-up" style={{ overflow: "hidden", borderRadius: "14px" }}>
       {/* Author */}
       <div style={{ padding: "18px 20px 14px", display: "flex", alignItems: "center", gap: "12px" }}>
-        <div style={{ width: "38px", height: "38px", borderRadius: "100%", background: `${color}22`, border: `1.5px solid ${color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: 700, color, flexShrink: 0 }}>
+        <div style={{ width: "38px", height: "38px", borderRadius: "100%", background: `${color}15`, border: `1.5px solid ${color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: 700, color, flexShrink: 0 }}>
           {initials}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#e8e8f0" }}>{post.author.name}</div>
-          <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)" }}>{new Date(post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+          <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--foreground)" }}>{post.author.name}</div>
+          <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{new Date(post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
         </div>
-        <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.25)", padding: "4px" }}>
+        <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px", opacity: 0.5 }}>
           <MoreHorizontal size={15} />
         </button>
       </div>
 
       {/* Content */}
       <div style={{ padding: "0 20px 16px" }}>
-        {post.title !== "Update" && <div style={{ fontSize: "1rem", fontWeight: 700, color: "#e8e8f0", marginBottom: "6px", letterSpacing: "-0.02em" }}>{post.title}</div>}
-        <p style={{ fontSize: "0.88rem", color: "rgba(232,232,240,0.75)", lineHeight: 1.65, margin: 0, whiteSpace: "pre-wrap" }}>{post.content}</p>
+        {post.title !== "Update" && <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--foreground)", marginBottom: "6px", letterSpacing: "-0.02em" }}>{post.title}</div>}
+        <p style={{ fontSize: "0.88rem", color: "var(--foreground)", opacity: 0.8, lineHeight: 1.65, margin: 0, whiteSpace: "pre-wrap" }}>{post.content}</p>
       </div>
 
       {/* Actions */}
-      <div style={{ height: "1px", background: "rgba(255,255,255,0.05)", margin: "0 20px" }} />
+      <div style={{ height: "1px", background: "var(--border)", margin: "0 20px", opacity: 0.5 }} />
       <div style={{ padding: "10px 16px", display: "flex", gap: "4px" }}>
         <button onClick={() => setLiked(l => !l)} style={{
           display: "flex", alignItems: "center", gap: "6px",
           padding: "6px 12px", borderRadius: "8px",
           background: liked ? "rgba(255,107,157,0.1)" : "none",
-          border: "none", cursor: "pointer", color: liked ? "#ff6b9d" : "rgba(255,255,255,0.35)",
+          border: "none", cursor: "pointer", color: liked ? "#ff6b9d" : "var(--muted-foreground)",
           fontSize: "0.8rem", transition: "all 0.15s",
         }}>
           <Heart size={14} style={{ fill: liked ? "#ff6b9d" : "none" }} /> {liked ? "Liked" : "Like"}
@@ -71,13 +71,13 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: number }
           display: "flex", alignItems: "center", gap: "6px",
           padding: "6px 12px", borderRadius: "8px",
           background: commentsOpen ? "rgba(124,107,255,0.1)" : "none",
-          border: "none", cursor: "pointer", color: commentsOpen ? "#a598ff" : "rgba(255,255,255,0.35)",
+          border: "none", cursor: "pointer", color: commentsOpen ? "var(--primary)" : "var(--muted-foreground)",
           fontSize: "0.8rem", transition: "all 0.15s",
         }}>
           {commentsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Comment
         </button>
         <div style={{ marginLeft: "auto" }}>
-          <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "8px", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.25)", fontSize: "0.8rem" }}>
+          <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.8rem", opacity: 0.6 }}>
             <Share2 size={14} /> Share
           </button>
         </div>
@@ -85,19 +85,19 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: number }
 
       {/* Comments */}
       {commentsOpen && (
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "14px 20px 16px" }}>
+        <div style={{ borderTop: "1px solid var(--border)", padding: "14px 20px 16px", background: "rgba(0,0,0,0.01)" }}>
           {comments.length === 0 ? (
-            <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.25)", marginBottom: "12px" }}>No comments yet. Be the first!</div>
+            <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginBottom: "12px", opacity: 0.6 }}>No comments yet. Be the first!</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "12px" }}>
               {comments.map(c => (
                 <div key={c.id} style={{ display: "flex", gap: "10px" }}>
-                  <div style={{ width: "28px", height: "28px", borderRadius: "100%", background: "rgba(124,107,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "#7c6bff", flexShrink: 0 }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "100%", background: "rgba(124,107,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "#7c6bff", flexShrink: 0 }}>
                     {c.author.name.charAt(0)}
                   </div>
-                  <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "8px 12px" }}>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(232,232,240,0.8)", marginBottom: "2px" }}>{c.author.name}</div>
-                    <div style={{ fontSize: "0.82rem", color: "rgba(232,232,240,0.65)", lineHeight: 1.5 }}>{c.content}</div>
+                  <div style={{ flex: 1, background: "var(--background)", border: "1px solid var(--border)", borderRadius: "10px", padding: "8px 12px" }}>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--foreground)", marginBottom: "2px" }}>{c.author.name}</div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>{c.content}</div>
                   </div>
                 </div>
               ))}
@@ -105,7 +105,7 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: number }
           )}
           {/* Comment input */}
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <div style={{ width: "28px", height: "28px", borderRadius: "100%", background: "rgba(124,107,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "#7c6bff", flexShrink: 0 }}>
+            <div style={{ width: "28px", height: "28px", borderRadius: "100%", background: "var(--background)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "var(--muted-foreground)", flexShrink: 0, opacity: 0.5 }}>
               Me
             </div>
             <input
@@ -113,15 +113,15 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: number }
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && commentText.trim() && addComment.mutate()}
-              style={{ flex: 1, padding: "8px 12px", fontSize: "0.82rem" }}
+              style={{ flex: 1, padding: "8px 12px", fontSize: "0.82rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
             />
             <button onClick={() => addComment.mutate()} disabled={!commentText.trim() || addComment.isPending} style={{
               width: "32px", height: "32px", borderRadius: "8px",
-              background: "rgba(124,107,255,0.2)", border: "1px solid rgba(124,107,255,0.3)",
+              background: "rgba(124,107,255,0.15)", border: "1px solid var(--primary-glow)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", flexShrink: 0,
             }}>
-              <Send size={13} color="#a598ff" />
+              <Send size={13} color="var(--primary)" />
             </button>
           </div>
         </div>
@@ -149,19 +149,19 @@ export default function CommunityPage() {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="page-bg" style={{ padding: "32px 36px", maxWidth: "760px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+    <div className="page-bg" style={{ padding: "32px 36px", maxWidth: "760px", margin: "0 auto", position: "relative", zIndex: 1, overflowY: "auto", height: "100%" }}>
       <div className="animate-fade-up" style={{ marginBottom: "28px" }}>
         <p className="section-label" style={{ marginBottom: "6px" }}>Connect & Share</p>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.04em", color: "#e8e8f0" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--foreground)" }}>
           Parent <span className="gradient-text">Community</span>
         </h1>
-        <p style={{ color: "rgba(255,255,255,0.35)", marginTop: "6px", fontSize: "0.88rem" }}>
+        <p style={{ color: "var(--muted-foreground)", marginTop: "6px", fontSize: "0.88rem" }}>
           Share experiences, ask questions, support other parents.
         </p>
       </div>
 
       {/* Compose */}
-      <div className="glass-card animate-fade-up delay-1" style={{ padding: "18px 20px", marginBottom: "28px", borderRadius: "14px" }}>
+      <div className="glass-card animate-fade-up delay-1" style={{ padding: "18px 20px", marginBottom: "28px", borderRadius: "14px", border: "1px solid var(--border)", background: "var(--card)" }}>
         <div style={{ display: "flex", gap: "12px" }}>
           <div style={{ width: "38px", height: "38px", borderRadius: "100%", background: "linear-gradient(135deg, #7c6bff, #4ecdc4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 700, color: "white", flexShrink: 0 }}>
             {initials}
@@ -172,7 +172,7 @@ export default function CommunityPage() {
               value={newPost}
               onChange={e => setNewPost(e.target.value)}
               rows={3}
-              style={{ width: "100%", marginBottom: "10px", padding: "10px 14px", fontSize: "0.88rem", resize: "none" }}
+              style={{ width: "100%", marginBottom: "10px", padding: "10px 14px", fontSize: "0.88rem", resize: "none", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
             />
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button onClick={() => createPost.mutate()} disabled={!newPost.trim() || createPost.isPending} className="btn-primary" style={{ padding: "8px 20px" }}>
@@ -184,14 +184,14 @@ export default function CommunityPage() {
       </div>
 
       {/* Feed */}
-      <div>
+      <div style={{ paddingBottom: "40px" }}>
         <div className="section-label" style={{ marginBottom: "14px" }}>Recent Discussions</div>
         {isLoading ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[1,2,3].map(i => <div key={i} className="animate-shimmer" style={{ height: "120px", borderRadius: "14px", background: "rgba(255,255,255,0.03)" }} />)}
+            {[1,2,3].map(i => <div key={i} className="animate-shimmer" style={{ height: "120px", borderRadius: "14px", background: "var(--card)", border: "1px solid var(--border)" }} />)}
           </div>
         ) : posts.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px", color: "rgba(255,255,255,0.25)", fontSize: "0.88rem" }}>
+          <div style={{ textAlign: "center", padding: "48px", color: "var(--muted-foreground)", fontSize: "0.88rem", opacity: 0.5 }}>
             No posts yet. Be the first to start a discussion!
           </div>
         ) : (

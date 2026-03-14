@@ -61,22 +61,22 @@ export default function CoachPage() {
   return (
     <div className="page-bg" style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", zIndex: 1 }}>
       {/* Header */}
-      <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "linear-gradient(135deg, #7c6bff 0%, #6c5ce7 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(124,107,255,0.3)" }}>
             <Sparkles size={18} color="white" />
           </div>
           <div>
-            <h1 style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "-0.03em", color: "#e8e8f0", lineHeight: 1 }}>
+            <h1 style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)", lineHeight: 1 }}>
               AI Parent Coach
             </h1>
-            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "3px" }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "3px" }}>
               Powered by Gemini · Multilingual · Tool-aware
             </p>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "100%", background: "#4ecdc4", boxShadow: "0 0 8px rgba(78,205,196,0.8)" }} />
-            <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>Online</span>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>Online</span>
           </div>
         </div>
       </div>
@@ -86,14 +86,14 @@ export default function CoachPage() {
         {isEmpty ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "24px" }}>
             {/* Avatar */}
-            <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "linear-gradient(135deg, rgba(124,107,255,0.2) 0%, rgba(78,205,196,0.1) 100%)", border: "1px solid rgba(124,107,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 30px rgba(124,107,255,0.15)" }}>
+            <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "linear-gradient(135deg, rgba(124,107,255,0.1) 0%, rgba(78,205,196,0.05) 100%)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 30px rgba(124,107,255,0.1)" }}>
               <Bot size={36} color="#7c6bff" />
             </div>
             <div style={{ textAlign: "center" }}>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.03em", color: "#e8e8f0", marginBottom: "8px" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: "8px" }}>
                 How can I help you today?
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.9rem", maxWidth: "380px", lineHeight: 1.6 }}>
+              <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", maxWidth: "380px", lineHeight: 1.6 }}>
                 I can access your child's school records, search the internet, schedule meetings, and send emails — all in your language.
               </p>
             </div>
@@ -102,12 +102,12 @@ export default function CoachPage() {
               {suggestions.map((s, i) => (
                 <button key={i} onClick={() => sendMessage(s)} style={{
                   padding: "12px 16px", borderRadius: "10px", textAlign: "left",
-                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(232,232,240,0.7)", fontSize: "0.82rem", cursor: "pointer", lineHeight: 1.4,
-                  transition: "all 0.15s ease",
+                  background: "var(--card)", border: "1px solid var(--border)",
+                  color: "var(--foreground)", fontSize: "0.82rem", cursor: "pointer", lineHeight: 1.4,
+                  transition: "all 0.15s ease", opacity: 0.8
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(124,107,255,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(124,107,255,0.2)"; (e.currentTarget as HTMLElement).style.color = "#a598ff"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(232,232,240,0.7)"; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(124,107,255,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--primary-glow)"; (e.currentTarget as HTMLElement).style.color = "var(--primary)"; (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--card)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.color = "var(--foreground)"; (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
                 >
                   {s}
                 </button>
@@ -119,7 +119,7 @@ export default function CoachPage() {
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", flexDirection: msg.role === "user" ? "row-reverse" : "row", alignItems: "flex-end", gap: "10px" }}>
                 {msg.role === "assistant" && (
-                  <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: "rgba(124,107,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: "linear-gradient(135deg, rgba(124,107,255,0.1), rgba(124,107,255,0.05))", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Bot size={15} color="#7c6bff" />
                   </div>
                 )}
@@ -134,12 +134,12 @@ export default function CoachPage() {
             ))}
             {isLoading && (
               <div style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
-                <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: "rgba(124,107,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: "rgba(124,107,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Bot size={15} color="#7c6bff" />
                 </div>
                 <div className="bubble-assistant" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Loader2 size={14} color="#7c6bff" style={{ animation: "spin 1s linear infinite" }} />
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem" }}>Thinking…</span>
+                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.82rem" }}>Thinking…</span>
                 </div>
               </div>
             )}
@@ -149,16 +149,16 @@ export default function CoachPage() {
       </div>
 
       {/* Input */}
-      <div style={{ padding: "16px 32px 24px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ padding: "16px 32px 24px", borderTop: "1px solid var(--border)", background: "var(--card)" }}>
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
-          <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <button type="button" onClick={toggleRecording} style={{
-              width: "42px", height: "42px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)",
-              background: isRecording ? "rgba(255,107,157,0.12)" : "rgba(255,255,255,0.04)",
+              width: "42px", height: "42px", borderRadius: "12px", border: "1px solid var(--border)",
+              background: isRecording ? "rgba(255,107,157,0.1)" : "var(--background)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
             }}>
-              <Mic size={16} color={isRecording ? "#ff6b9d" : "rgba(255,255,255,0.4)"} style={{ animation: isRecording ? "shimmer 1s ease infinite" : "none" }} />
+              <Mic size={16} color={isRecording ? "#ff6b9d" : "var(--muted-foreground)"} style={{ animation: isRecording ? "shimmer 1s ease infinite" : "none" }} />
             </button>
             <div style={{ flex: 1, position: "relative" }}>
               <input
@@ -166,14 +166,14 @@ export default function CoachPage() {
                 onChange={e => setInput(e.target.value)}
                 placeholder="Ask about your child's school, grades, meetings…"
                 disabled={isLoading}
-                style={{ width: "100%", padding: "12px 16px", fontSize: "0.88rem", borderRadius: "14px !important" as any }}
+                style={{ width: "100%", padding: "12px 16px", fontSize: "0.88rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />
             </div>
             <button type="submit" disabled={!input.trim() || isLoading} className="btn-primary" style={{ width: "42px", height: "42px", padding: 0, borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Send size={16} />
             </button>
           </form>
-          <p style={{ textAlign: "center", fontSize: "0.68rem", color: "rgba(255,255,255,0.2)", marginTop: "8px" }}>
+          <p style={{ textAlign: "center", fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "12px", opacity: 0.6 }}>
             AI can make mistakes. Always verify important information with the school.
           </p>
         </div>
