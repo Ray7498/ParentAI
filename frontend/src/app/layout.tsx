@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
-import QueryProvider from "@/providers/query-provider";
+import React from "react";
 import { SidebarWrapper } from "@/components/layout/sidebar-wrapper";
 import AuthProvider from "@/providers/auth-provider";
+import QueryProvider from "@/providers/query-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-serif" });
 
 export const metadata: Metadata = {
   title: "AI Parent Mentor",
@@ -18,18 +21,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
-        <QueryProvider>
-          <AuthProvider>
-            <div className="flex h-screen overflow-hidden">
-              <SidebarWrapper />
-              <main className="flex-1 overflow-y-auto">
-                {children}
-              </main>
-            </div>
-          </AuthProvider>
-        </QueryProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${dmSans.variable} ${dmSerif.variable} font-sans`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryProvider>
+            <AuthProvider>
+              <div style={{ display: "flex", minHeight: "100vh" }}>
+                <SidebarWrapper />
+                <main style={{ flex: 1, padding: "24px", minWidth: 0 }}>
+                  {children}
+                </main>
+              </div>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

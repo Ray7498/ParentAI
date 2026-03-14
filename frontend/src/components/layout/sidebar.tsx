@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, MessageSquare, Users, GraduationCap, LogOut,
-  UserCircle, Mail, Sparkles
+  UserCircle, Mail, Sparkles, Sun, Moon
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { useTheme } from "next-themes";
 
 const routes = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -19,6 +20,7 @@ const routes = [
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Parent";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
@@ -126,7 +128,7 @@ export function Sidebar() {
             {initials}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#e8e8f0", truncate: "true", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {displayName}
             </div>
             <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -134,21 +136,46 @@ export function Sidebar() {
             </div>
           </div>
         </div>
+        
+        {/* Theme Toggle */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            padding: "8px 12px", borderRadius: "8px", width: "100%",
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: "0.8rem", color: "var(--muted-foreground)",
+            transition: "all 0.15s ease", textAlign: "left", marginBottom: "4px"
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--foreground)";
+            (e.currentTarget as HTMLElement).style.background = "var(--input)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.color = "var(--muted-foreground)";
+            (e.currentTarget as HTMLElement).style.background = "none";
+          }}
+        >
+          {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+        </button>
+
+        {/* Logout */}
         <button
           onClick={logout}
           style={{
             display: "flex", alignItems: "center", gap: "8px",
             padding: "8px 12px", borderRadius: "8px", width: "100%",
             background: "none", border: "none", cursor: "pointer",
-            fontSize: "0.8rem", color: "rgba(255,255,255,0.3)",
+            fontSize: "0.8rem", color: "var(--muted-foreground)",
             transition: "all 0.15s ease", textAlign: "left",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#ff6b9d";
+            (e.currentTarget as HTMLElement).style.color = "var(--destructive)";
             (e.currentTarget as HTMLElement).style.background = "rgba(255,107,157,0.08)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)";
+            (e.currentTarget as HTMLElement).style.color = "var(--muted-foreground)";
             (e.currentTarget as HTMLElement).style.background = "none";
           }}
         >

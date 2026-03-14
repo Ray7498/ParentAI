@@ -4,6 +4,56 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Light Theme Variables */
+  --background: #f4f5f9;
+  --foreground: #1c1c28;
+  --card: #ffffff;
+  --card-foreground: #1c1c28;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c28;
+  --primary: #7c6bff;
+  --primary-foreground: #ffffff;
+  --secondary: #eaeaef;
+  --secondary-foreground: #4a4a68;
+  --muted: #f0f0f4;
+  --muted-foreground: #6b6b88;
+  --accent: #e2defd;
+  --accent-foreground: #2a1f5e;
+  --destructive: #ff4d6d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --input: rgba(0,0,0,0.06);
+  --ring: #7c6bff;
+  --radius: 0.875rem;
+
+  /* Brand colors (adjusted for light mode if needed, but mostly same) */
+  --violet: #7c6bff;
+  --violet-light: #6c5ce7; /* Slightly darker for contrast on white */
+  --violet-dim: rgba(124, 107, 255, 0.15);
+  --violet-glow: rgba(124, 107, 255, 0.2);
+  --rose: #ff4d6d;
+  --gold: #f4a261;
+  --teal: #2dd4bf;
+  --emerald: #10b981;
+
+  /* Glassmorphism - Light Mode */
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-hover: rgba(255, 255, 255, 0.95);
+
+  /* Sidebar - Light Mode */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1c1c28;
+  --sidebar-primary: #7c6bff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(124, 107, 255, 0.1);
+  --sidebar-accent-foreground: #7c6bff;
+  --sidebar-border: rgba(0,0,0,0.06);
+  --sidebar-ring: #7c6bff;
+}
+
+.dark {
+  /* Dark Theme Variables (Original) */
   --background: #0a0a12;
   --foreground: #e8e8f0;
   --card: #0f0f1a;
@@ -23,9 +73,7 @@
   --border: rgba(255,255,255,0.07);
   --input: rgba(255,255,255,0.06);
   --ring: #7c6bff;
-  --radius: 0.875rem;
-
-  /* Brand colors */
+  
   --violet: #7c6bff;
   --violet-light: #a598ff;
   --violet-dim: rgba(124, 107, 255, 0.15);
@@ -35,12 +83,10 @@
   --teal: #4ecdc4;
   --emerald: #2dd4bf;
 
-  /* Glassmorphism */
   --glass: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-hover: rgba(255, 255, 255, 0.06);
 
-  /* Sidebar */
   --sidebar: #080810;
   --sidebar-foreground: #e8e8f0;
   --sidebar-primary: #7c6bff;
@@ -130,7 +176,7 @@
   right: -10%;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(124, 107, 255, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--violet-glow) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -141,7 +187,7 @@
   left: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(78, 205, 196, 0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(78, 205, 196, 0.1) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -311,8 +357,8 @@
    INPUT STYLING  
    ============================================================ */
 input, textarea {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
+  background: var(--input) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 10px !important;
   color: var(--foreground) !important;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -323,26 +369,26 @@ input:focus, textarea:focus {
   outline: none !important;
 }
 input::placeholder, textarea::placeholder {
-  color: rgba(255,255,255,0.25) !important;
+  color: var(--muted-foreground) !important;
 }
 
 /* ============================================================
    SIDEBAR ACTIVE GLOW
    ============================================================ */
 .nav-active {
-  background: rgba(124,107,255,0.15);
-  color: #a598ff;
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
   border: 1px solid rgba(124,107,255,0.25);
   box-shadow: 0 0 20px rgba(124,107,255,0.1);
 }
 .nav-inactive {
-  color: rgba(232,232,240,0.45);
+  color: var(--muted-foreground);
   border: 1px solid transparent;
 }
 .nav-inactive:hover {
-  background: rgba(255,255,255,0.04);
-  color: rgba(232,232,240,0.8);
-  border-color: rgba(255,255,255,0.06);
+  background: var(--input);
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
 /* ============================================================
@@ -408,8 +454,8 @@ input::placeholder, textarea::placeholder {
    NOTIFICATION STRIP
    ============================================================ */
 .notif-strip {
-  background: linear-gradient(90deg, rgba(255,217,125,0.06), rgba(255,107,157,0.04));
-  border: 1px solid rgba(255,217,125,0.18);
+  background: linear-gradient(90deg, rgba(255,217,125,0.1), rgba(255,107,157,0.08));
+  border: 1px solid rgba(255,217,125,0.25);
   border-radius: 10px;
 }
 
@@ -421,7 +467,7 @@ input::placeholder, textarea::placeholder {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.3);
+  color: var(--muted-foreground);
 }
 
 /* ============================================================
@@ -429,5 +475,5 @@ input::placeholder, textarea::placeholder {
    ============================================================ */
 .divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
