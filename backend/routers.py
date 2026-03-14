@@ -116,7 +116,7 @@ def read_profile(user_id: int, db: Session = Depends(get_db)):
 def update_profile(user_id: int, profile: schemas.ProfileUpdate, db: Session = Depends(get_db)):
     return crud.update_profile(db, user_id=user_id, data=profile)
 
-@router.get("/messages/{user_id}/conversations", response_model=list[schemas.DirectMessage])
+@router.get("/messages/{user_id}/conversations", response_model=list[schemas.DirectMessageConversation])
 def get_conversations(user_id: int, db: Session = Depends(get_db)):
     return crud.get_dm_conversations(db, user_id=user_id)
 
@@ -162,3 +162,9 @@ def get_links(db: Session = Depends(get_db)):
 @router.get("/surveys", response_model=list[schemas.SurveyResponse])
 def get_surveys(db: Session = Depends(get_db)):
     return crud.get_surveys(db)
+@router.delete("/meetings/{meeting_id}")
+def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_meeting(db, meeting_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    return {"status": "success"}

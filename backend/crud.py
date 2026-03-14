@@ -43,6 +43,23 @@ def sync_user(db: Session, email: str, name: str):
     ]
     db.add_all(notifications)
     
+    # Seeding Timetable
+    timetable_data = [
+        {"day_of_week": 0, "start_time": "08:30", "end_time": "09:30", "subject": "Mathematics", "teacher": "Mr. Anderson", "room": "Room 101"},
+        {"day_of_week": 0, "start_time": "09:45", "end_time": "10:45", "subject": "Science", "teacher": "Dr. Roberts", "room": "Lab 2"},
+        {"day_of_week": 0, "start_time": "11:00", "end_time": "12:00", "subject": "History", "teacher": "Ms. Davis", "room": "Room 205"},
+    ]
+    for tt in timetable_data:
+        db.add(models.Timetable(student_id=student.id, **tt))
+
+    # Seeding Homework
+    homework_data = [
+        {"subject": "Mathematics", "description": "Algebra worksheet - Equations 1 to 20", "due_date": datetime.utcnow() + timedelta(days=2)},
+        {"subject": "English", "description": "Read Chapter 4 of 'The Giver' and write a summary.", "due_date": datetime.utcnow() + timedelta(days=3)},
+    ]
+    for hw in homework_data:
+        db.add(models.Homework(student_id=student.id, **hw))
+    
     # Auto-create empty profile
     profile = models.Profile(user_id=new_user.id, profession="Parent", age=None, bio=None)
     db.add(profile)
@@ -134,7 +151,7 @@ def create_comment(db: Session, post_id: int, comment: schemas.CommentCreate):
 
 # --- Direct Messages ---
 def get_dm_conversations(db: Session, user_id: int):
-    """Get list of unique conversation partners with their latest message."""
+    """Get list of unique conversation partners with their latest message and unread count."""
     messages = db.query(models.DirectMessage).filter(
         or_(
             models.DirectMessage.sender_id == user_id,
@@ -142,14 +159,28 @@ def get_dm_conversations(db: Session, user_id: int):
         )
     ).order_by(models.DirectMessage.created_at.desc()).all()
     
-    # Group by conversation partner
     seen = set()
     conversations = []
     for msg in messages:
         partner_id = msg.recipient_id if msg.sender_id == user_id else msg.sender_id
         if partner_id not in seen:
             seen.add(partner_id)
-            conversations.append(msg)
+            
+            # Fetch partner user object
+            partner = db.query(models.User).filter(models.User.id == partner_id).first()
+            
+            # Count unread messages from this partner
+            unread_count = db.query(models.DirectMessage).filter(
+                models.DirectMessage.sender_id == partner_id,
+                models.DirectMessage.recipient_id == user_id,
+                models.DirectMessage.is_read == 0
+            ).count()
+            
+            conversations.append({
+                "partner": partner,
+                "last_message": msg,
+                "unread_count": unread_count
+            })
     return conversations
 
 def get_dm_thread(db: Session, user_id: int, partner_id: int):
@@ -179,6 +210,13 @@ def mark_dms_read(db: Session, user_id: int, partner_id: int):
         models.DirectMessage.is_read == 0
     ).update({"is_read": 1})
     db.commit()
+def delete_meeting(db: Session, meeting_id: int):
+    db_meeting = db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+    if db_meeting:
+        db.delete(db_meeting)
+        db.commit()
+        return True
+    return False
 
 # --- Pronote CRUD ---
 

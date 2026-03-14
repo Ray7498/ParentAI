@@ -14,34 +14,61 @@ models.Base.metadata.create_all(bind=engine)
 def seed_db():
     db = SessionLocal()
     
-    # Check if we already have a robust database
-    if db.query(User).count() > 5:
-        print("Database already seeded with multiple users")
-        
-        # --- Pronote Features Dummy Data ---
-        print("Seeding Pronote Features data...")
-        
-        # Timetable for Emma (student_id = 1)
-        timetable_entries = [
-            Timetable(student_id=1, day_of_week=0, start_time="08:00", end_time="10:00", subject="Mathematics", teacher="Mr. Anderson", room="101"),
-            Timetable(student_id=1, day_of_week=0, start_time="10:15", end_time="12:15", subject="History", teacher="Ms. Davis", room="204"),
-            Timetable(student_id=1, day_of_week=0, start_time="13:00", end_time="15:00", subject="Science", teacher="Dr. Roberts", room="Lab 2"),
-            Timetable(student_id=1, day_of_week=1, start_time="09:00", end_time="11:00", subject="English Literature", teacher="Mrs. Smith", room="305"),
-            Timetable(student_id=1, day_of_week=1, start_time="11:15", end_time="13:15", subject="Art", teacher="Mr. Thompson", room="Art Studio"),
-        ]
-        db.add_all(timetable_entries)
-        
-        # Homework for Emma
-        base_date = datetime.now()
-        homeworks = [
-            Homework(student_id=1, subject="Mathematics", description="Complete exercises 1-15 on page 42.", due_date=base_date + timedelta(days=1), is_completed=0, requires_submission=1),
-            Homework(student_id=1, subject="History", description="Read chapter 4 and prepare for tomorrow's discussion.", due_date=base_date + timedelta(days=1), is_completed=1, requires_submission=0),
-            Homework(student_id=1, subject="Science", description="Write lab report on the photosynthesis experiment.", due_date=base_date + timedelta(days=3), is_completed=0, requires_submission=1),
-            Homework(student_id=1, subject="English Literature", description="Submit draft for the essay on 'To Kill a Mockingbird'.", due_date=base_date + timedelta(days=5), is_completed=0, requires_submission=1),
-        ]
-        db.add_all(homeworks)
+    # --- Ensure Primary User has Data ---
+    primary_email = "rayyanahmed292001@gmail.com"
+    user = db.query(User).filter(User.email == primary_email).first()
+    if not user:
+        user = User(name="Rayy", email=primary_email, role="parent")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-        # Useful Links
+    student = db.query(Student).filter(Student.parent_id == user.id).first()
+    if not student:
+        student = Student(name="Ayra", grade_level="4th Grade", school_name="Lincoln Elementary", parent_id=user.id)
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+
+    # Clear existing timetable/homework for this student to avoid partial data
+    db.query(Timetable).filter(Timetable.student_id == student.id).delete()
+    db.query(Homework).filter(Homework.student_id == student.id).delete()
+
+    tt = [
+        Timetable(student_id=student.id, day_of_week=0, start_time="08:00", end_time="09:30", subject="Mathematics", teacher="Mr. Anderson", room="101"),
+        Timetable(student_id=student.id, day_of_week=0, start_time="09:45", end_time="11:15", subject="Science", teacher="Dr. Roberts", room="Lab 2"),
+        Timetable(student_id=student.id, day_of_week=0, start_time="11:30", end_time="13:00", subject="History", teacher="Ms. Davis", room="204"),
+        Timetable(student_id=student.id, day_of_week=1, start_time="08:30", end_time="10:00", subject="English", teacher="Mrs. Smith", room="305"),
+        Timetable(student_id=student.id, day_of_week=1, start_time="10:15", end_time="11:45", subject="Art", teacher="Mr. Thompson", room="Art Studio"),
+        Timetable(student_id=student.id, day_of_week=2, start_time="09:00", end_time="10:30", subject="Physical Education", teacher="Coach Miller", room="Gym"),
+        Timetable(student_id=student.id, day_of_week=2, start_time="10:45", end_time="12:15", subject="Computer Science", teacher="Mr. Wilson", room="Comp Lab 1"),
+    ]
+    db.add_all(tt)
+
+    base = datetime.now()
+    hw = [
+        Homework(student_id=student.id, subject="Mathematics", description="Algebra worksheet - Equations 1 to 20.", due_date=base + timedelta(days=1), is_completed=0, requires_submission=1),
+        Homework(student_id=student.id, subject="Science", description="Draw a diagram of the human heart and label it.", due_date=base + timedelta(days=2), is_completed=0, requires_submission=0),
+        Homework(student_id=student.id, subject="English", description="Read 'Chapter 5' and write a 200-word summary.", due_date=base + timedelta(days=3), is_completed=1, requires_submission=1),
+        Homework(student_id=student.id, subject="Computer Science", description="Basic Python script to print Fibonacci sequence.", due_date=base + timedelta(days=5), is_completed=0, requires_submission=1),
+    ]
+    db.add_all(hw)
+
+    # Ensure some meetings exist for this user
+    existing_meetings = db.query(Meeting).filter(Meeting.parent_id == user.id).count()
+    if existing_meetings < 3:
+        ms = [
+            Meeting(parent_id=user.id, teacher_name="Mr. Anderson", date=base + timedelta(days=2, hours=4), status="scheduled"),
+            Meeting(parent_id=user.id, teacher_name="Mrs. Smith", date=base + timedelta(days=4, hours=-2), status="scheduled"),
+            Meeting(parent_id=user.id, teacher_name="Dr. Roberts", date=base + timedelta(days=7, hours=1), status="scheduled"),
+        ]
+        db.add_all(ms)
+
+    # --- Pronote Features Dummy Data ---
+    print("Seeding Pronote Features data...")
+    
+    # Check if links already exist
+    if db.query(Link).count() == 0:
         links = [
             Link(title="School Calendar", description="Official school calendar for the current academic year.", url="https://example.com/calendar"),
             Link(title="Canteen Menu", description="Weekly lunch menu and dietary information.", url="https://example.com/menu"),
@@ -49,17 +76,16 @@ def seed_db():
         ]
         db.add_all(links)
 
-        # Surveys and Information
+    if db.query(Survey).count() == 0:
         surveys = [
             Survey(title="End of Year Trip Preference", description="Please vote for the destination of the 5th-grade class trip."),
             Survey(title="New Extracurricular Activities", description="Let us know which new clubs you would like to see next semester."),
         ]
         db.add_all(surveys)
 
-        db.commit()
-
-        print("Database seeding completed.")
-        return
+    db.commit()
+    print("Database seeding completed.")
+    return
 
     first_names = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"]
     last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]

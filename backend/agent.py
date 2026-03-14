@@ -121,8 +121,48 @@ UPCOMING EVENTS:
             except Exception as e:
                 return f"Could not perform internet search: {str(e)}"
 
+        @tool
+        def delete_meeting(meeting_id: int) -> str:
+            """Delete a meeting from the calendar. Use this when the user wants to cancel or remove an appointment. You must have the meeting_id."""
+            db_del = SessionLocal()
+            try:
+                m = db_del.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+                if not m:
+                    return f"Meeting with ID {meeting_id} not found."
+                db_del.delete(m)
+                db_del.commit()
+                return f"Successfully deleted meeting {meeting_id} with {m.teacher_name}."
+            except Exception as e:
+                return f"Failed to delete meeting: {str(e)}"
+            finally:
+                db_del.close()
+
+        @tool
+        def search_community(query: str) -> str:
+            """Search the community feed (posts and comments) for similar questions or topics discussed by other parents. Use this to find peer support or previous answers."""
+            db_comm = SessionLocal()
+            try:
+                # Search posts
+                posts = db_comm.query(models.Post).filter(
+                    models.Post.title.ilike(f"%{query}%") | models.Post.content.ilike(f"%{query}%")
+                ).limit(3).all()
+                
+                if not posts:
+                    return "No similar questions found in the community feed."
+                
+                results = []
+                for p in posts:
+                    author = db_comm.query(models.User).filter(models.User.id == p.author_id).first()
+                    author_name = author.name if author else "A user"
+                    results.append(f"- User '{author_name}' asked: '{p.title}'. Content: '{p.content}'")
+                
+                formatted = "\n".join(results)
+                return f"Similar discussions found in the community:\n{formatted}\n\nNote: If this helps, you can message these users directly."
+            finally:
+                db_comm.close()
+
         llm = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview", google_api_key=api_key)
-        tools = [search_database, search_internet, schedule_meeting, send_email]
+        tools = [search_database, search_internet, schedule_meeting, delete_meeting, send_email, search_community]
         llm_with_tools = llm.bind_tools(tools)
         
         sys_msg = SystemMessage(content=f"""You are an AI Parent Coach helping parents navigate the school system.
@@ -130,14 +170,15 @@ UPCOMING EVENTS:
 ## Core Behavior Rules
 1. **Language**: Always respond in the same language the user writes in. Never switch to English unless the user asks you to translate.
 2. **Conciseness**: Keep replies short and focused. Do NOT dump all available data—only include what is directly relevant to the question.
-3. **Tool Selection**: You have four tools:
+3. **Tool Selection**:
    - `search_database`: For school-specific info (grades, meetings, events).
-   - `search_internet`: For general knowledge, parenting advice, educational tips, or anything not in the school database.
-   - `schedule_meeting`: When user wants to book a meeting with a teacher.
-   - `send_email`: When user wants to email a teacher or school staff.
-4. **Meeting Suggestions**: If after 2-3 exchanges the user still hasn't gotten the help they need, or the topic requires direct teacher involvement (e.g., behavioral issues, curriculum concerns, special needs), proactively suggest scheduling a meeting with the appropriate person (e.g., "I think it might help to speak directly with Ms. Johnson. Would you like me to schedule a meeting?").
-5. **RAG Relevance**: When using `search_database`, only mention information relevant to the user's specific question. Don't list all grades if they're asking about one subject.
-6. **Tone**: Warm, supportive, and concise. Like a knowledgeable friend who happens to know the school system well.
+   - `search_community`: Search the community feed for similar questions asked by other parents. If you find a match, mention it like: "User Y faced a similar issue and their answer was ABC. If that doesn't answer your question maybe you can send them a message."
+   - `search_internet`: For general knowledge or advice not in the database.
+   - `schedule_meeting` / `delete_meeting`: Manage teacher appointments.
+   - `send_email`: Contact staff directly.
+4. **Meeting Suggestions**: Suggest a meeting if the topic requires teacher involvement.
+5. **RAG Relevance**: Only include data directly related to the user's inquiry.
+6. **Interaction**: If you find a similar community post, encourage the user to reach out to that parent for more details.
 
 ## Context
 Parent is asking about: {student_name}
@@ -158,9 +199,11 @@ Today's date: 2026-03-14""")
                 tool_name = tool_call['name']
                 tool_func = {
                     'schedule_meeting': schedule_meeting,
+                    'delete_meeting': delete_meeting,
                     'send_email': send_email,
                     'search_database': search_database,
                     'search_internet': search_internet,
+                    'search_community': search_community,
                 }.get(tool_name)
                 
                 if tool_func:

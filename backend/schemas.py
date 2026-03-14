@@ -179,6 +179,14 @@ class DirectMessageResponse(DirectMessageBase):
     class Config:
         from_attributes = True
 
+class DirectMessageConversation(BaseModel):
+    partner: UserPublic
+    last_message: DirectMessage
+    unread_count: int
+
+    class Config:
+        from_attributes = True
+
 # Pronote Features Schemas
 
 class TimetableBase(BaseModel):
