@@ -179,3 +179,28 @@ def mark_dms_read(db: Session, user_id: int, partner_id: int):
         models.DirectMessage.is_read == 0
     ).update({"is_read": 1})
     db.commit()
+
+# --- Pronote CRUD ---
+
+def get_students_by_parent(db: Session, parent_id: int):
+    return db.query(models.Student).filter(models.Student.parent_id == parent_id).all()
+
+def get_timetable(db: Session, student_id: int):
+    return db.query(models.Timetable).filter(models.Timetable.student_id == student_id).order_by(models.Timetable.day_of_week, models.Timetable.start_time).all()
+
+def get_homework(db: Session, student_id: int):
+    return db.query(models.Homework).filter(models.Homework.student_id == student_id).order_by(models.Homework.due_date).all()
+
+def update_homework_status(db: Session, homework_id: int, is_completed: int):
+    hw = db.query(models.Homework).filter(models.Homework.id == homework_id).first()
+    if hw:
+        hw.is_completed = is_completed
+        db.commit()
+        db.refresh(hw)
+    return hw
+
+def get_links(db: Session):
+    return db.query(models.Link).all()
+
+def get_surveys(db: Session):
+    return db.query(models.Survey).order_by(models.Survey.created_at.desc()).all()

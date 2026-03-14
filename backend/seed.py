@@ -2,8 +2,12 @@ import asyncio
 from datetime import datetime, timedelta
 import random
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from database import engine, Base, SessionLocal
+from models import User, Student, Grade, Meeting, Event, Notification, Post, Profile, Comment, DirectMessage, Timetable, Homework, Link, Survey
 import models
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -11,8 +15,50 @@ def seed_db():
     db = SessionLocal()
     
     # Check if we already have a robust database
-    if db.query(models.User).count() > 5:
+    if db.query(User).count() > 5:
         print("Database already seeded with multiple users")
+        
+        # --- Pronote Features Dummy Data ---
+        print("Seeding Pronote Features data...")
+        
+        # Timetable for Emma (student_id = 1)
+        timetable_entries = [
+            Timetable(student_id=1, day_of_week=0, start_time="08:00", end_time="10:00", subject="Mathematics", teacher="Mr. Anderson", room="101"),
+            Timetable(student_id=1, day_of_week=0, start_time="10:15", end_time="12:15", subject="History", teacher="Ms. Davis", room="204"),
+            Timetable(student_id=1, day_of_week=0, start_time="13:00", end_time="15:00", subject="Science", teacher="Dr. Roberts", room="Lab 2"),
+            Timetable(student_id=1, day_of_week=1, start_time="09:00", end_time="11:00", subject="English Literature", teacher="Mrs. Smith", room="305"),
+            Timetable(student_id=1, day_of_week=1, start_time="11:15", end_time="13:15", subject="Art", teacher="Mr. Thompson", room="Art Studio"),
+        ]
+        db.add_all(timetable_entries)
+        
+        # Homework for Emma
+        base_date = datetime.now()
+        homeworks = [
+            Homework(student_id=1, subject="Mathematics", description="Complete exercises 1-15 on page 42.", due_date=base_date + timedelta(days=1), is_completed=0, requires_submission=1),
+            Homework(student_id=1, subject="History", description="Read chapter 4 and prepare for tomorrow's discussion.", due_date=base_date + timedelta(days=1), is_completed=1, requires_submission=0),
+            Homework(student_id=1, subject="Science", description="Write lab report on the photosynthesis experiment.", due_date=base_date + timedelta(days=3), is_completed=0, requires_submission=1),
+            Homework(student_id=1, subject="English Literature", description="Submit draft for the essay on 'To Kill a Mockingbird'.", due_date=base_date + timedelta(days=5), is_completed=0, requires_submission=1),
+        ]
+        db.add_all(homeworks)
+
+        # Useful Links
+        links = [
+            Link(title="School Calendar", description="Official school calendar for the current academic year.", url="https://example.com/calendar"),
+            Link(title="Canteen Menu", description="Weekly lunch menu and dietary information.", url="https://example.com/menu"),
+            Link(title="Library Resources", description="Access the digital library and research databases.", url="https://example.com/library"),
+        ]
+        db.add_all(links)
+
+        # Surveys and Information
+        surveys = [
+            Survey(title="End of Year Trip Preference", description="Please vote for the destination of the 5th-grade class trip."),
+            Survey(title="New Extracurricular Activities", description="Let us know which new clubs you would like to see next semester."),
+        ]
+        db.add_all(surveys)
+
+        db.commit()
+
+        print("Database seeding completed.")
         return
 
     first_names = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"]

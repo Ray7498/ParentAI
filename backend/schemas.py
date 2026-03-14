@@ -162,3 +162,78 @@ class DirectMessage(BaseModel):
     recipient: CommentAuthor
     class Config:
         from_attributes = True
+
+# Assuming DirectMessageBase is intended to be a base for DirectMessageResponse
+class DirectMessageBase(BaseModel):
+    sender_id: int
+    recipient_id: int
+    content: str
+    is_read: int = 0 # Default for new messages
+
+class DirectMessageResponse(DirectMessageBase):
+    id: int
+    created_at: datetime
+    sender: UserPublic
+    recipient: UserPublic
+
+    class Config:
+        from_attributes = True
+
+# Pronote Features Schemas
+
+class TimetableBase(BaseModel):
+    day_of_week: int
+    start_time: str
+    end_time: str
+    subject: str
+    teacher: str
+    room: str
+
+class TimetableCreate(TimetableBase):
+    pass
+
+class TimetableResponse(TimetableBase):
+    id: int
+    student_id: int
+    
+    class Config:
+        from_attributes = True
+
+class HomeworkBase(BaseModel):
+    subject: str
+    description: str
+    due_date: datetime
+    is_completed: int = 0
+    requires_submission: int = 0
+
+class HomeworkCreate(HomeworkBase):
+    pass
+
+class HomeworkResponse(HomeworkBase):
+    id: int
+    student_id: int
+
+    class Config:
+        from_attributes = True
+
+class LinkBase(BaseModel):
+    title: str
+    description: str
+    url: str
+
+class LinkResponse(LinkBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class SurveyBase(BaseModel):
+    title: str
+    description: str
+
+class SurveyResponse(SurveyBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

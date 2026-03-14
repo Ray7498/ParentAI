@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from database import Base
 
 class User(Base):
@@ -31,10 +31,11 @@ class Student(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     grade_level = Column(String)
-    school_name = Column(String)
     parent_id = Column(Integer, ForeignKey("users.id"))
     parent = relationship("User", back_populates="students")
     grades = relationship("Grade", back_populates="student")
+    timetable = relationship("Timetable", back_populates="student")
+    homework = relationship("Homework", back_populates="student")
 
 class Grade(Base):
     __tablename__ = "grades"
@@ -96,8 +97,45 @@ class DirectMessage(Base):
     id = Column(Integer, primary_key=True, index=True)
     sender_id = Column(Integer, ForeignKey("users.id"))
     recipient_id = Column(Integer, ForeignKey("users.id"))
-    content = Column(Text)
+    content = Column(String)
     is_read = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
     recipient = relationship("User", foreign_keys=[recipient_id], back_populates="received_messages")
+
+class Timetable(Base):
+    __tablename__ = "timetable"
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"))
+    day_of_week = Column(Integer)  # 0=Monday, 1=Tuesday, etc.
+    start_time = Column(String)    # "08:00"
+    end_time = Column(String)      # "10:00"
+    subject = Column(String)
+    teacher = Column(String)
+    room = Column(String)
+    student = relationship("Student", back_populates="timetable")
+
+class Homework(Base):
+    __tablename__ = "homework"
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"))
+    subject = Column(String)
+    description = Column(String)
+    due_date = Column(DateTime)
+    is_completed = Column(Integer, default=0)
+    requires_submission = Column(Integer, default=0)
+    student = relationship("Student", back_populates="homework")
+
+class Link(Base):
+    __tablename__ = "links"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    url = Column(String)
+
+class Survey(Base):
+    __tablename__ = "surveys"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

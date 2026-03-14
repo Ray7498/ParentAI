@@ -125,6 +125,40 @@ def get_thread(user_id: int, partner_id: int, db: Session = Depends(get_db)):
     crud.mark_dms_read(db, user_id=user_id, partner_id=partner_id)
     return crud.get_dm_thread(db, user_id=user_id, partner_id=partner_id)
 
-@router.post("/messages/send", response_model=schemas.DirectMessage)
-def send_dm(dm: schemas.DirectMessageCreate, db: Session = Depends(get_db)):
-    return crud.send_dm(db, dm=dm)
+@router.post("/messages/send", response_model=schemas.DirectMessageResponse)
+def send_dm(message: schemas.DirectMessageCreate, db: Session = Depends(get_db)):
+    return crud.send_dm(db, message)
+
+# --- Pronote Features Endpoints ---
+
+@router.get("/parents/{parent_id}/timetable", response_model=list[schemas.TimetableResponse])
+def get_parent_timetable(parent_id: int, db: Session = Depends(get_db)):
+    students = crud.get_students_by_parent(db, parent_id)
+    if not students:
+        return []
+    # Assuming the first student for simplicity
+    return crud.get_timetable(db, students[0].id)
+
+@router.get("/parents/{parent_id}/homework", response_model=list[schemas.HomeworkResponse])
+def get_parent_homework(parent_id: int, db: Session = Depends(get_db)):
+    students = crud.get_students_by_parent(db, parent_id)
+    if not students:
+        return []
+    return crud.get_homework(db, students[0].id)
+
+@router.put("/homework/{homework_id}/status", response_model=schemas.HomeworkResponse)
+def update_homework_status(homework_id: int, status: dict, db: Session = Depends(get_db)):
+    # Expects {"is_completed": 1} or {"is_completed": 0}
+    is_completed = status.get("is_completed", 0)
+    hw = crud.update_homework_status(db, homework_id, is_completed)
+    if not hw:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    return hw
+
+@router.get("/links", response_model=list[schemas.LinkResponse])
+def get_links(db: Session = Depends(get_db)):
+    return crud.get_links(db)
+
+@router.get("/surveys", response_model=list[schemas.SurveyResponse])
+def get_surveys(db: Session = Depends(get_db)):
+    return crud.get_surveys(db)
