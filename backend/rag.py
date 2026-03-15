@@ -4,7 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 import os
 import yaml
 
@@ -58,7 +58,7 @@ def setup_rag():
 def get_rag_retriever():
     vectorstore = setup_rag()
     if vectorstore:
-        return vectorstore.as_retriever()
+        return vectorstore.as_retriever(search_type="similarity",search_kwargs={"k": 4})
     return None
 
 if __name__ == "__main__":

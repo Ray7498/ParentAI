@@ -231,7 +231,7 @@ UPCOMING EVENTS:
                 docs = retriever.get_relevant_documents(query)
                 if not docs:
                     return "No specific information found in the school handbook."
-                return "\n\n---\n\n".join([d.page_content for d in docs])
+                return "\n".join([d.page_content for d in docs[:3]])
             except Exception as e:
                 return f"Error searching school info: {str(e)}"
 
@@ -285,10 +285,15 @@ UPCOMING EVENTS:
                 return response.content[0]['text']
         
         return str(response.content)
+    # except Exception as e:
+    #     import traceback
+    #     traceback.print_exc()
+    #     return "I encountered an error connecting to the AI model."
     except Exception as e:
         import traceback
+        print("LLM ERROR:", str(e))
         traceback.print_exc()
-        return "I encountered an error connecting to the AI model."
+        return f"AI Error: {str(e)}"
 
 def rewrite_post(text: str) -> str:
     try:

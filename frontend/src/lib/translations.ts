@@ -15,19 +15,19 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "Contact Staff",
     inbox: "Inbox",
     alerts: "Alerts",
-    
+
     // Timetable
     timetable: "Class Timetable",
     today: "Today",
     tomorrow: "Tomorrow",
     subject_teacher: "Subject & Teacher",
-    
+
     // Homework
     homework_assignments: "Homework & Assignments",
     pending: "Pending",
     completed: "Completed",
     due: "Due",
-    
+
     // Performance
     academic_performance: "Academic Performance",
     recent_grades: "Recent Grades",
@@ -46,14 +46,14 @@ export const translations: Record<string, Record<string, string>> = {
 
     // AI Coach Page
     ai_parent_coach: "AI Parent Coach",
-    powered_by: "Powered by Gemini · Multilingual · Tool-aware",
+    powered_by: "",
     online: "Online",
     how_can_i_help: "How can I help you today?",
     coach_description: "I can access your child's school records, search the internet, schedule meetings, and send emails — all in your language.",
     ask_placeholder: "Ask about your child's school, grades, meetings…",
     disclaimer: "AI can make mistakes. Always verify important information with the school.",
     thinking: "Thinking…",
-    
+
     // Messages Page
     direct_messages: "Direct Messages",
     new_message: "New Message",
@@ -124,17 +124,17 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "Personal kontaktieren",
     inbox: "Posteingang",
     alerts: "Warnungen",
-    
+
     timetable: "Stundenplan",
     today: "Heute",
     tomorrow: "Morgen",
     subject_teacher: "Fach & Lehrer",
-    
+
     homework_assignments: "Hausaufgaben & Aufgaben",
     pending: "Ausstehend",
     completed: "Abgeschlossen",
     due: "Fällig",
-    
+
     academic_performance: "Akademische Leistung",
     recent_grades: "Aktuelle Noten",
     gpa: "GPA",
@@ -156,7 +156,7 @@ export const translations: Record<string, Record<string, string>> = {
     ask_placeholder: "Fragen Sie nach der Schule Ihres Kindes, Noten, Besprechungen…",
     disclaimer: "KI kann Fehler machen. Überprüfen Sie wichtige Informationen immer mit der Schule.",
     thinking: "Denkt nach…",
-    
+
     direct_messages: "Direktnachrichten",
     new_message: "Neue Nachricht",
     type_message: "Geben Sie eine Nachricht ein...",
@@ -222,17 +222,17 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "Contacter le personnel",
     inbox: "Boîte de réception",
     alerts: "Alertes",
-    
+
     timetable: "Emploi du temps",
     today: "Aujourd'hui",
     tomorrow: "Demain",
     subject_teacher: "Matière & Enseignant",
-    
+
     homework_assignments: "Devoirs & Missions",
     pending: "En attente",
     completed: "Terminé",
     due: "À rendre",
-    
+
     academic_performance: "Performances académiques",
     recent_grades: "Notes récentes",
     gpa: "Moyenne",
@@ -254,7 +254,7 @@ export const translations: Record<string, Record<string, string>> = {
     ask_placeholder: "Posez des questions sur l'école, les notes, les réunions…",
     disclaimer: "L'IA peut se tromper. Vérifiez toujours les informations importantes avec l'école.",
     thinking: "Réflexion…",
-    
+
     direct_messages: "Messages Directs",
     new_message: "Nouveau Message",
     type_message: "Tapez un message...",
@@ -320,17 +320,17 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "Contactar al Personal",
     inbox: "Bandeja",
     alerts: "Alertas",
-    
+
     timetable: "Horario de Clases",
     today: "Hoy",
     tomorrow: "Mañana",
     subject_teacher: "Materia y Profesor",
-    
+
     homework_assignments: "Tareas y Asignaciones",
     pending: "Pendiente",
     completed: "Completado",
     due: "Vencimiento",
-    
+
     academic_performance: "Rendimiento Académico",
     recent_grades: "Calificaciones Recientes",
     gpa: "Promedio",
@@ -352,7 +352,7 @@ export const translations: Record<string, Record<string, string>> = {
     ask_placeholder: "Pregunte sobre la escuela de su hijo, calificaciones, reuniones…",
     disclaimer: "La IA puede cometer errores. Verifique siempre la información importante con la escuela.",
     thinking: "Pensando…",
-    
+
     direct_messages: "Mensajes Directos",
     new_message: "Nuevo Mensaje",
     type_message: "Escriba un mensaje...",
@@ -418,17 +418,17 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "الاتصال بالموظفين",
     inbox: "صندوق الوارد",
     alerts: "تنبيهات",
-    
+
     timetable: "الجدول الزمني للفصول",
     today: "اليوم",
     tomorrow: "غدًا",
     subject_teacher: "المادة والمعلم",
-    
+
     homework_assignments: "الواجبات والمهام",
     pending: "قيد الانتظار",
     completed: "مكتمل",
     due: "مستحق",
-    
+
     academic_performance: "الأداء الأكاديمي",
     recent_grades: "الدرجات الحديثة",
     gpa: "المعدل",
@@ -450,7 +450,7 @@ export const translations: Record<string, Record<string, string>> = {
     ask_placeholder: "اسأل عن مدرسة طفلك، التقييمات، الاجتماعات…",
     disclaimer: "يمكن أن يخطئ الذكاء الاصطناعي. تحقق دائمًا من المعلومات المهمة مع المدرسة.",
     thinking: "يفكر…",
-    
+
     direct_messages: "الرسائل المباشرة",
     new_message: "رسالة جديدة",
     type_message: "اكتب رسالة...",
@@ -516,17 +516,17 @@ export const translations: Record<string, Record<string, string>> = {
     contact_staff: "Personelle İletişime Geç",
     inbox: "Gelen Kutusu",
     alerts: "Uyarılar",
-    
+
     timetable: "Ders Programı",
     today: "Bugün",
     tomorrow: "Yarın",
     subject_teacher: "Ders ve Öğretmen",
-    
+
     homework_assignments: "Ödevler ve Görevler",
     pending: "Bekliyor",
     completed: "Tamamlandı",
     due: "Bitiş",
-    
+
     academic_performance: "Akademik Performans",
     recent_grades: "Son Notlar",
     gpa: "Not Ortalaması",
@@ -548,7 +548,7 @@ export const translations: Record<string, Record<string, string>> = {
     ask_placeholder: "Çocuğunuzun okulu, notları, toplantıları hakkında soru sorun…",
     disclaimer: "YZ hata yapabilir. Önemli bilgileri her zaman okulla doğrulayın.",
     thinking: "Düşünüyor…",
-    
+
     direct_messages: "Doğrudan Mesajlar",
     new_message: "Yeni Mesaj",
     type_message: "Bir mesaj yazın...",
