@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Send, Mic, Bot, Loader2, Sparkles } from "lucide-react";
+import { Send, Mic, Bot, Loader2, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -24,7 +24,38 @@ export default function CoachPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Stop any ongoing speech when component unmounts or messages change
+  useEffect(() => { return () => { window.speechSynthesis?.cancel(); }; }, []);
+
+  const speakText = useCallback((text: string, index: number) => {
+    if (!window.speechSynthesis) return;
+    // If already speaking this bubble, stop
+    if (speakingIndex === index) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+    // Strip markdown so it doesn't get read literally
+    const stripped = text
+      .replace(/#{1,6}\s/g, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/`{1,3}[^`]*`{1,3}/g, "")
+      .replace(/\[(.+?)\]\(.+?\)/g, "$1")
+      .replace(/[-*+]\s/g, "")
+      .trim();
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(stripped);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
+  }, [speakingIndex]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -131,6 +162,26 @@ export default function CoachPage() {
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     </div>
                   ) : msg.content}
+                  {/* TTS button — sits below the bubble text */}
+                  <div style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", marginTop: "6px" }}>
+                    <button
+                      onClick={() => speakText(msg.content, i)}
+                      title={speakingIndex === i ? "Stop" : "Read aloud"}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", padding: "2px 4px",
+                        color: speakingIndex === i ? "var(--primary)" : "var(--muted-foreground)",
+                        opacity: speakingIndex === i ? 1 : 0.45,
+                        borderRadius: "6px", transition: "opacity 0.2s, color 0.2s",
+                        display: "flex", alignItems: "center", gap: "3px",
+                      }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "1"}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = speakingIndex === i ? "1" : "0.45"}
+                    >
+                      {speakingIndex === i
+                        ? <VolumeX size={13} />
+                        : <Volume2 size={13} />}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

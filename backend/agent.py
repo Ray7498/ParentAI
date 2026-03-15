@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 import crud
 import models
 import yaml
+import rag
 
 # Load Agent Config
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "configs", "agent_config.yaml")
@@ -155,20 +156,33 @@ UPCOMING EVENTS:
 
         @tool
         def search_internet(query: str) -> str:
-            """Search the internet for general info or advice not found in the school database or RAG. DuckDuckGo is used."""
+            """Search the internet for general information, advice, or news not found in the school database.
+            Returns results with titles, summaries, and clickable source URLs.
+            Always use this for questions about external topics, general parenting advice, local services, etc."""
             try:
                 from duckduckgo_search import DDGS
                 with DDGS() as ddgs:
-                    results = list(ddgs.text(query, max_results=4))
+                    results = list(ddgs.text(query, max_results=5))
                 if not results:
-                    return "No results found on the internet for this query."
-                formatted = "\n\n".join([
-                    f"**{r['title']}**\n{r['body']}\nSource: {r['href']}"
-                    for r in results
-                ])
-                return f"Internet search results for '{query}':\n\n{formatted}"
+                    return "No internet results found for this query."
+                # Build a clearly structured response the LLM can cite
+                lines = [f"Web search results for: '{query}'\n"]
+                for i, r in enumerate(results, 1):
+                    title = r.get('title', 'Untitled')
+                    body  = r.get('body', '').strip()
+                    url   = r.get('href', '')
+                    lines.append(
+                        f"[{i}] **{title}**\n"
+                        f"{body}\n"
+                        f"Source: [{title}]({url})\n"
+                    )
+                lines.append(
+                    "\nIMPORTANT: In your response you MUST include a '## Sources' section at the end "
+                    "listing every source you used as a numbered markdown hyperlink: [Title](URL)."
+                )
+                return "\n".join(lines)
             except Exception as e:
-                return f"Could not perform internet search: {str(e)}"
+                return f"Internet search failed: {str(e)}"
 
         @tool
         def delete_meeting(meeting_id: int) -> str:
@@ -206,8 +220,23 @@ UPCOMING EVENTS:
             except Exception as e:
                 return f"Failed to search community: {str(e)}"
 
+        @tool
+        def search_school_info(query: str) -> str:
+            """Search the school handbook, parent guides, and general German school system documentation for official rules, protocols, or advice.
+            Use this for questions about grades, transfers, extracurriculars, or school policies."""
+            try:
+                retriever = rag.get_rag_retriever()
+                if not retriever:
+                    return "RAG system is currently unavailable (check API keys)."
+                docs = retriever.get_relevant_documents(query)
+                if not docs:
+                    return "No specific information found in the school handbook."
+                return "\n\n---\n\n".join([d.page_content for d in docs])
+            except Exception as e:
+                return f"Error searching school info: {str(e)}"
+
         llm = ChatGoogleGenerativeAI(model=AGENT_CONFIG.get("model", "gemini-3.1-pro-preview"), google_api_key=api_key)
-        tools = [search_database, search_internet, check_teacher_schedule, schedule_meeting, delete_meeting, send_email, search_community]
+        tools = [search_database, search_internet, check_teacher_schedule, schedule_meeting, delete_meeting, send_email, search_community, search_school_info]
         llm_with_tools = llm.bind_tools(tools)
         
         # Format the system prompt from config
@@ -240,6 +269,7 @@ UPCOMING EVENTS:
                     'search_database': search_database,
                     'search_internet': search_internet,
                     'search_community': search_community,
+                    'search_school_info': search_school_info,
                 }.get(tool_name)
                 
                 if tool_func:

@@ -12,9 +12,9 @@ const API = "http://127.0.0.1:8000/api";
 type Comment = { id: number; content: string; author: { id: number; name: string }; created_at: string };
 type Post = { id: number; title: string; content: string; image_url?: string | null; file_url?: string | null; file_name?: string | null; file_type?: string | null; created_at: string; author: { id: number; name: string; role: string }; comments: Comment[] };
 
-function PostCard({ post, currentUserId, targetLanguage, enableTranslation, isPinned, onTogglePin }: { post: Post; currentUserId: number, targetLanguage: string, enableTranslation: boolean, isPinned: boolean, onTogglePin: () => void }) {
+function PostCard({ post, currentUserId, isPinned, onTogglePin }: { post: Post; currentUserId: number; isPinned: boolean; onTogglePin: () => void }) {
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [liked, setLiked] = useState(false);
@@ -46,23 +46,25 @@ function PostCard({ post, currentUserId, targetLanguage, enableTranslation, isPi
     onSuccess: () => { setCommentText(""); queryClient.invalidateQueries({ queryKey: ["comments", post.id] }); },
   });
 
+  // Auto-translate using the global language from the profile — no manual toggle needed
+  const shouldTranslate = language !== "English" && !showOriginal;
   const { data: translatedContent, isFetching: isTranslating } = useQuery<{text: string, title: string}>({
-    queryKey: ["translate", post.id, targetLanguage],
+    queryKey: ["translate", post.id, language],
     queryFn: async () => {
-      const resText = await axios.post(`${API}/community/translate`, { text: post.content, target_language: targetLanguage });
+      const resText = await axios.post(`${API}/community/translate`, { text: post.content, target_language: language });
       let resTitle = null;
       if (post.title !== "Update") {
-        const titlePost = await axios.post(`${API}/community/translate`, { text: post.title, target_language: targetLanguage });
+        const titlePost = await axios.post(`${API}/community/translate`, { text: post.title, target_language: language });
         resTitle = titlePost.data.translated_text;
       }
       return { text: resText.data.translated_text, title: resTitle || "Update" };
     },
-    enabled: enableTranslation && targetLanguage !== "English" && targetLanguage.trim() !== "",
-    staleTime: Infinity, // Cache translation forever per language
+    enabled: language !== "English",
+    staleTime: Infinity,
   });
 
-  const displayTitle = (enableTranslation && !showOriginal && targetLanguage !== "English" && translatedContent && post.title !== "Update") ? translatedContent.title : post.title;
-  const displayContent = (enableTranslation && !showOriginal && targetLanguage !== "English" && translatedContent) ? translatedContent.text : post.content;
+  const displayTitle = (shouldTranslate && translatedContent && post.title !== "Update") ? translatedContent.title : post.title;
+  const displayContent = (shouldTranslate && translatedContent) ? translatedContent.text : post.content;
 
   const initials = post.author.name.charAt(0).toUpperCase();
   const colors = ["#7c6bff", "#4ecdc4", "#ff6b9d", "#ffd97d"];
@@ -297,31 +299,8 @@ export default function CommunityPage() {
   const [eventData, setEventData] = useState<{ title: string, date: string, location: string } | null>(null);
   const [surveyOptions, setSurveyOptions] = useState<string[] | null>(null);
 
-  // Translation States
+  // Translation is handled globally by LanguageProvider — no local state needed
   const [pinnedPostIds, setPinnedPostIds] = useState<Set<number>>(new Set());
-  const [enableTranslation, setEnableTranslation] = useState(true);
-  const [targetLanguage, setTargetLanguage] = useState("English");
-  
-  // Fetch user profile to get preferred language
-  const { data: userProfile } = useQuery({
-    queryKey: ["userProfile", user?.app_user_id],
-    queryFn: async () => {
-      if (!user?.app_user_id) return { preferred_language: "English" };
-      try {
-        const d = (await axios.get(`${API}/profile/${user.app_user_id}`)).data;
-        return { preferred_language: d.preferred_language || "English" };
-      } catch (e) {
-        return { preferred_language: "English" };
-      }
-    },
-    enabled: !!user?.app_user_id
-  });
-
-  useEffect(() => {
-    if (userProfile?.preferred_language) {
-       setTargetLanguage(userProfile.preferred_language);
-    }
-  }, [userProfile?.preferred_language]);
 
   const example_images = [
     "/community/kids_crafts.png",
@@ -411,31 +390,6 @@ export default function CommunityPage() {
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <p className="section-label" style={{ margin: 0 }}>{t("theVillage")}</p>
-
-            {/* Translation Toggle Dropdown */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--card)", padding: "6px 12px", borderRadius: "100px", border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }} onClick={() => setEnableTranslation(!enableTranslation)}>
-                 <div style={{ width: "32px", height: "18px", background: enableTranslation ? "var(--primary)" : "rgba(0,0,0,0.1)", borderRadius: "100px", position: "relative", transition: "all 0.3s" }}>
-                    <div style={{ width: "14px", height: "14px", background: "white", borderRadius: "50%", position: "absolute", top: "2px", left: enableTranslation ? "16px" : "2px", transition: "all 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }} />
-                 </div>
-                 <span style={{ fontSize: "0.8rem", fontWeight: 600, color: enableTranslation ? "var(--primary)" : "var(--muted-foreground)" }}>{t("translateBtn")}</span>
-              </div>
-              
-              <div style={{ width: "1px", height: "14px", background: "rgba(0,0,0,0.1)" }} />
-              
-              <select 
-                value={targetLanguage} 
-                onChange={e => setTargetLanguage(e.target.value)}
-                style={{ background: "none", border: "none", fontSize: "0.85rem", fontWeight: 600, color: "var(--foreground)", outline: "none", cursor: "pointer", appearance: "none", paddingRight: "16px", backgroundImage: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>')", backgroundRepeat: "no-repeat", backgroundPosition: "right center" }}
-              >
-                <option value="English">English</option>
-                <option value="German">Deutsch (German)</option>
-                <option value="French">Français (French)</option>
-                <option value="Spanish">Español (Spanish)</option>
-                <option value="Arabic">العربية (Arabic)</option>
-                <option value="Turkish">Türkçe (Turkish)</option>
-              </select>
-            </div>
         </div>
         
         <h1 style={{ fontSize: "2.4rem", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--foreground)", textShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
@@ -693,8 +647,6 @@ export default function CommunityPage() {
                 <PostCard
                   post={p}
                   currentUserId={user?.app_user_id || 1}
-                  targetLanguage={targetLanguage}
-                  enableTranslation={enableTranslation}
                   isPinned={pinnedPostIds.has(p.id)}
                   onTogglePin={() => setPinnedPostIds(prev => {
                     const next = new Set(prev);

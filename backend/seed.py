@@ -1,251 +1,380 @@
-import asyncio
 from datetime import datetime, timedelta
 import random
-from sqlalchemy.orm import Session
 from database import engine, Base, SessionLocal
-from models import User, Student, Grade, Meeting, Event, Notification, Post, Profile, Comment, DirectMessage, Timetable, Homework, Link, Survey, School
+from models import (
+    User, Student, Grade, Meeting, Event, Notification,
+    Post, Profile, Comment, DirectMessage, Timetable,
+    Homework, Link, Survey, School
+)
 import models
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 models.Base.metadata.create_all(bind=engine)
 
+
 def seed_db():
+
     db = SessionLocal()
-    
-    # Check if schools already exist, if so skip seeding to avoid duplicates
+
     if db.query(School).count() > 0:
-        print("Database already seeded with Schools!")
-        db.close()
+        print("Database already seeded!")
         return
 
-    print("Seeding Schools...")
+    print("Seeding demo database...")
+
+    # --------------------------------------------------
+    # SCHOOLS
+    # --------------------------------------------------
+
     schools = [
-        School(name="Goethe-Gymnasium", city="Berlin", description="A historic gymnasium in Berlin with a focus on classical education."),
-        School(name="Albert-Einstein-Schule", city="Munich", description="A modern school in Munich emphasizing STEM subjects."),
-        School(name="Schiller-Gymnasium", city="Hamburg", description="A vibrant school in Hamburg with strong arts and humanities programs.")
+
+        School(
+            name="Robert-Mayer-Gymnasium",
+            city="Heilbronn",
+            description="Science focused Gymnasium."
+        ),
+
+        School(
+            name="Justinus-Kerner-Gymnasium",
+            city="Heilbronn",
+            description="Large language-focused Gymnasium."
+        ),
+
+        School(
+            name="Elly-Heuss-Knapp-Gymnasium",
+            city="Heilbronn",
+            description="Arts and humanities Gymnasium."
+        ),
+
+        School(
+            name="Dammrealschule",
+            city="Heilbronn",
+            description="Realschule with technical focus."
+        ),
+
+        School(
+            name="Albert-Einstein-Gymnasium",
+            city="Stuttgart",
+            description="Modern STEM focused school."
+        ),
+
+        School(
+            name="Geschwister-Scholl-Schule",
+            city="Berlin",
+            description="Comprehensive secondary school."
+        )
     ]
+
     db.add_all(schools)
     db.commit()
+
     for s in schools:
         db.refresh(s)
 
-    print("Seeding Teachers and Admin Staff...")
-    teacher_data = {
-        "Goethe-Gymnasium": [
-            ("Mr. Klaus Schmidt", "administration"), # Principal
-            ("Mrs. Heidi Müller", "administration"), # Secretary
-            ("Ms. Anna Fischer", "teacher"), # Counselor/Teacher
-            ("Mr. Thomas Bauer", "teacher"),
-            ("Mrs. Sabine Richter", "teacher")
-        ],
-        "Albert-Einstein-Schule": [
-            ("Dr. Hans Becker", "administration"), # Principal
-            ("Mr. Jonas Weber", "administration"), # Vice Principal
-            ("Mrs. Clara Hoffmann", "administration"), # Secretary
-            ("Mr. Lukas Wagner", "teacher"),
-            ("Dr. Angela Stein", "teacher")
-        ],
-        "Schiller-Gymnasium": [
-            ("Mrs. Sabine Wagner", "administration"), # Principal
-            ("Mr. Lukas Meyer", "administration"), # Vice Principal
-            ("Mrs. Julia Koch", "administration"), # Secretary
-            ("Mr. Felix Schulz", "teacher"),
-            ("Mrs. Laura Neumann", "teacher")
-        ]
-    }
-    
-    db_teachers = []
-    teachers_by_school = {}
-    
-    for school in schools:
-        teachers_by_school[school.id] = []
-        for name, role in teacher_data[school.name]:
-            email = f"{name.split(' ')[-1].lower()}@{school.name.lower().replace('-', '')}.edu"
-            u = User(name=name, email=email, role=role, school_id=school.id)
-            db.add(u)
-            db_teachers.append(u)
-            if role == "teacher":
-                teachers_by_school[school.id].append(u)
-    
-    db.commit()
-    for t in db_teachers:
-        db.refresh(t)
+    # --------------------------------------------------
+    # TEACHERS
+    # --------------------------------------------------
 
-    # --- Ensure Primary User has Data ---
-    print("Seeding Primary User...")
-    primary_email = "rayyanahmed292001@gmail.com"
-    user = db.query(User).filter(User.email == primary_email).first()
-    
-    goethe_school = db.query(School).filter(School.name == "Goethe-Gymnasium").first()
-    
-    if not user:
-        user = User(name="Rayy", email=primary_email, role="parent", school_id=goethe_school.id)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    else:
-        user.school_id = goethe_school.id
-        db.commit()
-
-    student = db.query(Student).filter(Student.parent_id == user.id).first()
-    if not student:
-        student = Student(name="Ayra", grade_level="4th Grade", parent_id=user.id, school_id=goethe_school.id)
-        db.add(student)
-        db.commit()
-        db.refresh(student)
-
-    # Clear existing timetable/homework for this student to avoid partial data
-    db.query(Timetable).filter(Timetable.student_id == student.id).delete()
-    db.query(Homework).filter(Homework.student_id == student.id).delete()
-
-    tt = [
-        Timetable(student_id=student.id, day_of_week=0, start_time="08:00", end_time="09:30", subject="Mathematics", teacher="Mr. Thomas Bauer", room="101"),
-        Timetable(student_id=student.id, day_of_week=0, start_time="09:45", end_time="11:15", subject="Science", teacher="Mrs. Sabine Richter", room="Lab 2"),
-        Timetable(student_id=student.id, day_of_week=0, start_time="11:30", end_time="13:00", subject="History", teacher="Ms. Anna Fischer", room="204"),
-        Timetable(student_id=student.id, day_of_week=1, start_time="08:30", end_time="10:00", subject="English", teacher="Mr. Thomas Bauer", room="305"),
-        Timetable(student_id=student.id, day_of_week=1, start_time="10:15", end_time="11:45", subject="Art", teacher="Mrs. Sabine Richter", room="Art Studio"),
-        Timetable(student_id=student.id, day_of_week=2, start_time="09:00", end_time="10:30", subject="Physical Education", teacher="Ms. Anna Fischer", room="Gym"),
-        Timetable(student_id=student.id, day_of_week=2, start_time="10:45", end_time="12:15", subject="Computer Science", teacher="Mr. Thomas Bauer", room="Comp Lab 1"),
+    teacher_names = [
+        "Dr. Markus Schneider",
+        "Claudia Becker",
+        "Thomas Bauer",
+        "Sabine Richter",
+        "Ali Demir",
+        "Julia Wagner",
+        "Stefan Vogt",
+        "Mehmet Kaya",
+        "Lisa Braun",
+        "Nina Hartmann"
     ]
-    db.add_all(tt)
 
-    base = datetime.now()
-    hw = [
-        Homework(student_id=student.id, subject="Mathematics", description="Algebra worksheet - Equations 1 to 20.", due_date=base + timedelta(days=1), is_completed=0, requires_submission=1),
-        Homework(student_id=student.id, subject="Science", description="Draw a diagram of the human heart and label it.", due_date=base + timedelta(days=2), is_completed=0, requires_submission=0),
-        Homework(student_id=student.id, subject="English", description="Read 'Chapter 5' and write a 200-word summary.", due_date=base + timedelta(days=3), is_completed=1, requires_submission=1),
-        Homework(student_id=student.id, subject="Computer Science", description="Basic Python script to print Fibonacci sequence.", due_date=base + timedelta(days=5), is_completed=0, requires_submission=1),
-    ]
-    db.add_all(hw)
+    teachers_by_school = {s.id: [] for s in schools}
 
-    # Ensure some meetings exist for this user with real teachers
-    existing_meetings = db.query(Meeting).filter(Meeting.parent_id == user.id).count()
-    if existing_meetings < 3:
-        ms = [
-            Meeting(parent_id=user.id, teacher_id=teachers_by_school[goethe_school.id][0].id, teacher_name=teachers_by_school[goethe_school.id][0].name, date=base + timedelta(days=1, hours=10-base.hour), status="scheduled"),
-            Meeting(parent_id=user.id, teacher_id=teachers_by_school[goethe_school.id][1].id, teacher_name=teachers_by_school[goethe_school.id][1].name, date=base + timedelta(days=3, hours=14-base.hour), status="scheduled"),
-        ]
-        db.add_all(ms)
+    for name in teacher_names:
 
-    # --- Pronote Features Dummy Data ---
-    print("Seeding Pronote Features data...")
-    if db.query(Link).count() == 0:
-        links = [
-            Link(title="School Calendar", description="Official school calendar for the current academic year.", url="https://example.com/calendar"),
-            Link(title="Canteen Menu", description="Weekly lunch menu and dietary information.", url="https://example.com/menu"),
-            Link(title="Library Resources", description="Access the digital library and research databases.", url="https://example.com/library"),
-        ]
-        db.add_all(links)
+        school = random.choice(schools)
 
-    if db.query(Survey).count() == 0:
-        surveys = [
-            Survey(title="End of Year Trip Preference", description="Please vote for the destination of the 5th-grade class trip."),
-            Survey(title="New Extracurricular Activities", description="Let us know which new clubs you would like to see next semester."),
-        ]
-        db.add_all(surveys)
+        teacher = User(
+            name=name,
+            email=name.replace(" ", ".").lower() + "@school.de",
+            role="teacher",
+            school_id=school.id
+        )
+
+        db.add(teacher)
+        teachers_by_school[school.id].append(teacher)
+
     db.commit()
 
-    print("Seeding Parents & General Students...")
-    subjects = ["Math", "Science", "English", "History", "Physical Education", "Art", "Computer Science"]
-    grades_possible = ["1", "2", "3", "4", "5", "6"]
-    
-    events_data = [
-        ("Parent-Teacher Conferences", "Quarterly conferences in the main hall.", "Main Hall"),
-        ("Science Fair", "Annual school science fair. Parents welcome.", "Gymnasium"),
-        ("Spring Concert", "The band will be performing their spring repertoire.", "Auditorium"),
-        ("Book Fair", "Scholastic book fair will be open all week.", "Library"),
-        ("PTA Meeting", "Monthly PTA meeting to discuss upcoming fundraisers.", "Cafeteria"),
-        ("Field Day", "Annual games and sports day for all grades.", "Football Field")
+    # --------------------------------------------------
+    # PRIMARY DEMO USER
+    # --------------------------------------------------
+
+    demo_parent = User(
+        name="Rayy Ahmed",
+        email="rayyanahmed292001@gmail.com",
+        role="parent",
+        school_id=schools[0].id
+    )
+
+    db.add(demo_parent)
+    db.commit()
+    db.refresh(demo_parent)
+
+    # --------------------------------------------------
+    # DEMO STUDENT
+    # --------------------------------------------------
+
+    student = Student(
+        name="Ayra Ahmed",
+        grade_level="4th Grade",
+        parent_id=demo_parent.id,
+        school_id=schools[0].id
+    )
+
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    # --------------------------------------------------
+    # TIMETABLE
+    # --------------------------------------------------
+
+    timetable = [
+
+        Timetable(
+            student_id=student.id,
+            day_of_week=0,
+            start_time="08:00",
+            end_time="09:30",
+            subject="Mathematics",
+            teacher="Dr. Markus Schneider",
+            room="101"
+        ),
+
+        Timetable(
+            student_id=student.id,
+            day_of_week=1,
+            start_time="09:45",
+            end_time="11:15",
+            subject="Science",
+            teacher="Sabine Richter",
+            room="Lab 2"
+        ),
+
+        Timetable(
+            student_id=student.id,
+            day_of_week=2,
+            start_time="11:30",
+            end_time="13:00",
+            subject="History",
+            teacher="Thomas Bauer",
+            room="204"
+        )
+
     ]
 
-    # Create 15 Parents with random schools
+    db.add_all(timetable)
+
+    # --------------------------------------------------
+    # HOMEWORK
+    # --------------------------------------------------
+
+    homework = [
+
+        Homework(
+            student_id=student.id,
+            subject="Mathematics",
+            description="Complete exercises 1–15 on fractions.",
+            due_date=datetime.now() + timedelta(days=1),
+            is_completed=0,
+            requires_submission=1
+        ),
+
+        Homework(
+            student_id=student.id,
+            subject="Science",
+            description="Prepare a small presentation about the solar system.",
+            due_date=datetime.now() + timedelta(days=3),
+            is_completed=0,
+            requires_submission=0
+        )
+    ]
+
+    db.add_all(homework)
+
+    # --------------------------------------------------
+    # EVENTS (LOCAL HEILBRONN)
+    # --------------------------------------------------
+
+    events = [
+
+        Event(
+            title="Experimenta Science Museum Trip",
+            description="School trip to the Experimenta science center.",
+            location="Experimenta Heilbronn",
+            date=datetime.now() + timedelta(days=5)
+        ),
+
+        Event(
+            title="Heilbronner Falken Hockey Game",
+            description="Students attending local hockey match.",
+            location="Kolbenschmidt Arena",
+            date=datetime.now() + timedelta(days=8)
+        ),
+
+        Event(
+            title="Theater Heilbronn Play",
+            description="Class visit to children's theater play.",
+            location="Theater Heilbronn",
+            date=datetime.now() + timedelta(days=12)
+        ),
+
+        Event(
+            title="City History Museum Visit",
+            description="History class visit to Haus der Stadtgeschichte.",
+            location="Haus der Stadtgeschichte Heilbronn",
+            date=datetime.now() + timedelta(days=15)
+        )
+
+    ]
+
+    db.add_all(events)
+
+    # --------------------------------------------------
+    # COMMUNITY PARENTS
+    # --------------------------------------------------
+
+    parent_names = [
+
+        "Anna Müller",
+        "Thomas Weber",
+        "Julia Schneider",
+        "Lukas Fischer",
+        "Fatma Yılmaz",
+        "Ahmet Kaya",
+        "Mohamed Al-Hassan",
+        "Layla Al-Hassan",
+        "Ion Popescu",
+        "Maria Popescu",
+        "Elena Petrova",
+        "Marco Rossi"
+    ]
+
     parents = []
-    for i in range(15):
-        random_school = random.choice(schools)
-        parent = models.User(name=f"Parent {i}", email=f"parent{i}@example.com", role="parent", school_id=random_school.id)
+
+    for name in parent_names:
+
+        parent = User(
+            name=name,
+            email=name.replace(" ", ".").lower() + "@example.com",
+            role="parent",
+            school_id=random.choice(schools).id
+        )
+
         db.add(parent)
         parents.append(parent)
+
     db.commit()
-    for p in parents:
-        db.refresh(p)
 
-    # Create 20 Students linked to the parents and schools
-    students = []
-    for i in range(20):
-        parent = random.choice(parents)
-        student = models.Student(
-            name=f"Student {i}",
-            grade_level=f"{random.randint(5, 12)}th Grade",
-            parent_id=parent.id,
-            school_id=parent.school_id
-        )
-        db.add(student)
-        students.append(student)
-    db.commit()
-    for st in students:
-        db.refresh(st)
+    # --------------------------------------------------
+    # COMMUNITY POSTS WITH IMAGES
+    # --------------------------------------------------
 
-    # Generate random Grades
-    for _ in range(60):
-        student = random.choice(students)
-        grade = models.Grade(
-            subject=random.choice(subjects),
-            score=random.choice(grades_possible),
-            comments="Good effort overall." if random.random() > 0.5 else "Needs some improvement.",
-            student_id=student.id
-        )
-        db.add(grade)
+# --------------------------------------------------
+# COMMUNITY POSTS WITH IMAGES
+# --------------------------------------------------
 
-    # Generate random Meetings
-    for _ in range(30):
-        parent = random.choice(parents)
-        teacher = random.choice(teachers_by_school[parent.school_id])
-        date_offset = random.randint(-15, 15)
-        
-        meeting_time = datetime.utcnow() + timedelta(days=date_offset)
-        meeting_time = meeting_time.replace(hour=random.randint(13, 16), minute=0, second=0, microsecond=0)
-        
-        meeting = models.Meeting(
-            parent_id=parent.id,
-            teacher_id=teacher.id,
-            teacher_name=teacher.name,
-            date=meeting_time,
-            status="scheduled" if date_offset > 0 else "completed"
-        )
-        db.add(meeting)
+    parent_lookup = {p.name: p.id for p in parents}
 
-    # Generate Events
-    for e in events_data:
-        event = models.Event(
-            title=e[0],
-            description=e[1],
-            location=e[2],
-            date=datetime.utcnow() + timedelta(days=random.randint(2, 30))
-        )
-        db.add(event)
+    posts_data = [
 
-    # Generate 15 Community Posts (Globally visible)
-    example_images = [
-        None, None, None,
-        "/community/kids_crafts.png",
-        "/community/school_bake_sale.png",
-        "/community/playground_fun.png"
-    ]
-    for _ in range(15):
-        author = random.choice(parents)
-        post = models.Post(
-            title=f"Question about {random.choice(['homework', 'field trip', 'school lunch', 'extracurriculars'])}",
-            content="Does anyone have more info on this? I am trying to figure out the schedule.",
-            image_url=random.choice(example_images),
-            author_id=author.id
+            ("Experimenta museum trip",
+            "My kids loved the experiments at Experimenta today!",
+            "/community/experimenta_heilbronn.jpg",
+            "Anna Müller"),
+
+            ("Heilbronner Falken hockey game",
+            "Great atmosphere at the Falken hockey game!",
+            "/community/heilbronner_falken_game.jpg",
+            "Thomas Weber"),
+
+            # Spanish – asking about transferring a student
+            (
+                "Traslado escolar de Heilbronn a Múnich",
+                "Nos mudaremos pronto de Heilbronn a Múnich. ¿Alguien sabe cuál es el procedimiento y los documentos necesarios para cambiar a mi hijo de escuela? ¿Cuánto tiempo suele tardar?",
+                None,
+                "Marco Rossi"
+            ),
+
+            ("Hockey game feedback",
+            "The kids enjoyed the match but organization could be better.",
+            "/community/heilbronner_falken_game.jpg",
+            "Lukas Fischer"),
+
+            ("Theater visit",
+            "The children’s play at Theater Heilbronn was fantastic!",
+            "/community/theater_heilbronn.jpg",
+            "Julia Schneider"),
+
+            ("Theater review",
+            "Nice performance but maybe too long for younger kids.",
+            "/community/theater_heilbronn.jpg",
+            "Thomas Weber"),
+
+            # Arabic – activities during holidays
+            (
+                "أنشطة للأطفال خلال العطلة",
+                "هل يعرف أحد أنشطة أو أماكن جيدة للأطفال في هايلبرون خلال العطلة المدرسية؟ أبحث عن متاحف أو ورش عمل أو أنشطة ممتعة للأطفال.",
+                None,
+                "Mohamed Al-Hassan"
+            ),
+
+            ("Science project day",
+            "Our kids built amazing science experiments this week.",
+            "/community/kids_science_project.jpg",
+            "Elena Petrova"),
+
+            ("Playground fun",
+            "Kids had a great time after school today.",
+            "/community/playground_fun.png",
+            "Maria Popescu"),
+
+            ("Arts and crafts club",
+            "My daughter made this craft in school club today.",
+            "/community/kids_crafts.png",
+            "Anna Müller"),
+
+            # Turkish – school reviews
+            (
+                "Heilbronn'daki okul hakkında görüşler",
+                "Heilbronn'daki Justinus-Kerner-Gymnasium hakkında deneyimi olan var mı? Eğitim kalitesi ve öğretmenler hakkında geri bildirim almak isterim.",
+                None,
+                "Fatma Yılmaz"
+            ),
+
+            ("Experimenta too crowded",
+            "The museum was interesting but extremely crowded with school groups.",
+            "/community/experimenta_heilbronn.jpg",
+            "Lukas Fischer"),
+
+        ]
+
+    for title, content, image, author_name in posts_data:
+
+        post = Post(
+            title=title,
+            content=content,
+            image_url=image,
+            author_id=parent_lookup[author_name]
         )
+
         db.add(post)
 
     db.commit()
     db.close()
-    print("Large dummy database with German schools seeded successfully!")
+
+    print("Demo database seeded successfully!")
+
 
 if __name__ == "__main__":
     seed_db()
