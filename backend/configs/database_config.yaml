@@ -1,0 +1,4 @@
+database:
+  url: "sqlite:///./sql_app.db"
+  connect_args:
+    check_same_thread: false

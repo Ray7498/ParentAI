@@ -6,6 +6,7 @@ import { SidebarWrapper } from "@/components/layout/sidebar-wrapper";
 import AuthProvider from "@/providers/auth-provider";
 import QueryProvider from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import LanguageProvider from "@/providers/language-provider";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-serif" });
@@ -26,12 +27,16 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <QueryProvider>
             <AuthProvider>
-              <div style={{ display: "flex", minHeight: "100vh" }}>
-                <SidebarWrapper />
-                <main style={{ flex: 1, padding: "24px", minWidth: 0 }}>
-                  {children}
-                </main>
-              </div>
+              <LanguageProvider>
+                <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+                  <div style={{ position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
+                    <SidebarWrapper />
+                  </div>
+                  <main style={{ flex: 1, padding: "24px", minWidth: 0, overflowY: "auto", height: "100vh" }}>
+                    {children}
+                  </main>
+                </div>
+              </LanguageProvider>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

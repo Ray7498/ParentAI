@@ -8,21 +8,23 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useTheme } from "next-themes";
-
-const routes = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/coach", label: "AI Coach", icon: Sparkles },
-  { href: "/community", label: "Community", icon: Users },
-  { href: "/messages", label: "Messages", icon: Mail },
-  { href: "/profile", label: "My Profile", icon: UserCircle },
-];
+import { useLanguage } from "@/providers/language-provider";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
 
-  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Parent";
+  const routes = [
+    { href: "/", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/coach", label: t("ai_coach"), icon: Sparkles },
+    { href: "/community", label: t("community"), icon: Users },
+    { href: "/messages", label: t("messages"), icon: Mail },
+    { href: "/profile", label: t("profile"), icon: UserCircle },
+  ];
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || t("parentH");
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
@@ -184,7 +186,7 @@ export function Sidebar() {
           }}
         >
           <LogOut size={14} />
-          Sign out
+          {t("sign_out")}
         </button>
       </div>
     </div>

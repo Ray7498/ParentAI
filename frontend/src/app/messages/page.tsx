@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useSearchParams } from "next/navigation";
 import { Send, MessageSquare } from "lucide-react";
+import { useLanguage } from "@/providers/language-provider";
 
 type DM = { id: number; sender_id: number; recipient_id: number; content: string; is_read: number; created_at: string; sender: { id: number; name: string }; recipient: { id: number; name: string } };
 
@@ -20,6 +21,7 @@ const avatarColors = ["#7c6bff", "#4ecdc4", "#ff6b9d", "#ffd97d", "#a598ff"];
 
 function MessagesContent() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,7 @@ function MessagesContent() {
             <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(124,107,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <MessageSquare size={16} color="#7c6bff" />
             </div>
-            <h1 style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)" }}>Messages</h1>
+            <h1 style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)" }}>{t("messages")}</h1>
           </div>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "3px" }}>
             Find parents via Profile → Search
@@ -108,10 +110,10 @@ function MessagesContent() {
             <Avatar name={selectedPartner.name} size={36} />
             <div>
               <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>{selectedPartner.name}</div>
-              <div style={{ fontSize: "0.7rem", color: "#4ecdc4", display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "0.7rem", color: "#4ecdc4", display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ width: "6px", height: "6px", borderRadius: "100%", background: "#4ecdc4" }} />
-                Online
-              </div>
+                {t("online")}
+              </span>
             </div>
           </div>
 
@@ -148,7 +150,7 @@ function MessagesContent() {
           <div style={{ padding: "16px 24px 24px", borderTop: "1px solid var(--border)", background: "var(--card)" }}>
             <form onSubmit={e => { e.preventDefault(); if (messageInput.trim()) sendMutation.mutate(); }} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <input
-                placeholder={`Message ${selectedPartner.name}…`}
+                placeholder={`${t("type_message")} ${selectedPartner.name}`}
                 value={messageInput}
                 onChange={e => setMessageInput(e.target.value)}
                 disabled={sendMutation.isPending}
@@ -165,7 +167,7 @@ function MessagesContent() {
           <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "var(--card)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)" }}>
             <MessageSquare size={36} color="var(--muted-foreground)" style={{ opacity: 0.3 }} />
           </div>
-          <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", fontWeight: 500 }}>Select a conversation to start messaging</p>
+          <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", fontWeight: 500 }}>{t("direct_messages")}</p>
         </div>
       )}
     </div>

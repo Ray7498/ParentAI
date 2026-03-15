@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
-import crud, models, schemas
+import crud, models, schemas, agent
 from database import SessionLocal
 
 router = APIRouter()
@@ -11,6 +11,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@router.post("/chat", response_model=schemas.ChatResponse)
+def handle_chat(request: schemas.ChatRequest, db: Session = Depends(get_db)):
+    reply = agent.process_chat(request.message, request.parent_id, db)
+    return schemas.ChatResponse(reply=reply)
+
+@router.post("/translate-email", response_model=schemas.TranslateResponse)
+def translate_email(request: schemas.TranslateRequest):
+    mock_reply = "This is a mock simplified translation of the school email. It says: Important announcement regarding the new schedule."
+    return schemas.TranslateResponse(translated_summary=mock_reply)
 
 @router.post("/auth/sync", response_model=schemas.AuthSyncResponse)
 def auth_sync(req: schemas.AuthSyncRequest, db: Session = Depends(get_db)):
@@ -53,13 +63,47 @@ def read_parent_grades(parent_id: int, db: Session = Depends(get_db)):
 def read_events(db: Session = Depends(get_db)):
     return crud.get_events(db)
 
+@router.post("/events", response_model=schemas.Event)
+def create_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
+    return crud.create_event(db=db, event=event)
+
 @router.get("/community/posts", response_model=list[schemas.Post])
 def read_posts(db: Session = Depends(get_db)):
     return crud.get_posts(db)
 
+@router.post("/upload", response_model=schemas.UploadResponse)
+def upload_file(file: UploadFile = File(...)):
+    import os, uuid, shutil
+    os.makedirs("uploads", exist_ok=True)
+    ext = file.filename.split('.')[-1] if '.' in file.filename else ''
+    filename = f"{uuid.uuid4()}.{ext}" if ext else str(uuid.uuid4())
+    filepath = os.path.join("uploads", filename)
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {
+        "file_url": f"http://127.0.0.1:8000/uploads/{filename}",
+        "file_name": file.filename,
+        "file_type": file.content_type or ""
+    }
+
 @router.post("/community/posts", response_model=schemas.Post)
 def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return crud.create_post(db=db, post=post)
+
+@router.post("/community/rewrite", response_model=schemas.RewriteResponse)
+def rewrite_community_post(request: schemas.RewriteRequest):
+    rewritten_text = agent.rewrite_post(request.text)
+    return schemas.RewriteResponse(rewritten_text=rewritten_text)
+
+@router.post("/community/translate", response_model=schemas.TranslationResponse)
+def translate_community_post(request: schemas.TranslationRequest):
+    translated_text = agent.translate_text(request.text, request.target_language)
+    return schemas.TranslationResponse(translated_text=translated_text)
+
+@router.post("/community/batch-translate")
+def batch_translate_posts(request: schemas.BatchTranslationRequest):
+    results = agent.batch_translate_texts(request.texts, request.target_language)
+    return {"translations": results}
 
 @router.get("/community/posts/{post_id}/comments", response_model=list[schemas.Comment])
 def read_comments(post_id: int, db: Session = Depends(get_db)):

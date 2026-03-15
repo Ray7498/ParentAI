@@ -6,6 +6,7 @@ import { Send, Mic, Bot, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useLanguage } from "@/providers/language-provider";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -18,6 +19,7 @@ const suggestions = [
 
 export default function CoachPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -68,15 +70,15 @@ export default function CoachPage() {
           </div>
           <div>
             <h1 style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)", lineHeight: 1 }}>
-              AI Parent Coach
+              {t("ai_parent_coach")}
             </h1>
             <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "3px" }}>
-              Powered by Gemini · Multilingual · Tool-aware
+              {t("powered_by")}
             </p>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "100%", background: "#4ecdc4", boxShadow: "0 0 8px rgba(78,205,196,0.8)" }} />
-            <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>Online</span>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{t("online")}</span>
           </div>
         </div>
       </div>
@@ -91,10 +93,10 @@ export default function CoachPage() {
             </div>
             <div style={{ textAlign: "center" }}>
               <h2 style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: "8px" }}>
-                How can I help you today?
+                {t("how_can_i_help")}
               </h2>
               <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", maxWidth: "380px", lineHeight: 1.6 }}>
-                I can access your child's school records, search the internet, schedule meetings, and send emails — all in your language.
+                {t("coach_description")}
               </p>
             </div>
             {/* Suggestions */}
@@ -139,7 +141,7 @@ export default function CoachPage() {
                 </div>
                 <div className="bubble-assistant" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Loader2 size={14} color="#7c6bff" style={{ animation: "spin 1s linear infinite" }} />
-                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.82rem" }}>Thinking…</span>
+                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.82rem" }}>{t("thinking")}</span>
                 </div>
               </div>
             )}
@@ -164,7 +166,7 @@ export default function CoachPage() {
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ask about your child's school, grades, meetings…"
+                placeholder={t("ask_placeholder")}
                 disabled={isLoading}
                 style={{ width: "100%", padding: "12px 16px", fontSize: "0.88rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
               />
@@ -174,7 +176,7 @@ export default function CoachPage() {
             </button>
           </form>
           <p style={{ textAlign: "center", fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "12px", opacity: 0.6 }}>
-            AI can make mistakes. Always verify important information with the school.
+            {t("disclaimer")}
           </p>
         </div>
       </div>

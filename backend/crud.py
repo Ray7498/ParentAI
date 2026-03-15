@@ -13,13 +13,20 @@ def sync_user(db: Session, email: str, name: str):
     
     # Create new user
     new_user = models.User(name=name, email=email, role="parent")
+    school = db.query(models.School).first()
+    if school:
+        new_user.school_id = school.id
+        
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     
     # Auto-generate dummy data for this new user
     child_name = f"{name.split(' ')[0]}'s Child" if name else "Student"
-    student = models.Student(name=child_name, grade_level="5th Grade", school_name="Lincoln Elementary", parent_id=new_user.id)
+    student = models.Student(name=child_name, grade_level="5th Grade", parent_id=new_user.id)
+    if school:
+        student.school_id = school.id
+        
     db.add(student)
     db.commit()
     db.refresh(student)
@@ -31,9 +38,15 @@ def sync_user(db: Session, email: str, name: str):
     ]
     db.add_all(grades)
     
+    teachers = db.query(models.User).filter(models.User.role == "teacher").limit(2).all()
+    teacher1_id = teachers[0].id if teachers else None
+    teacher1_name = teachers[0].name if teachers else "Mr. Smith"
+    teacher2_id = teachers[1].id if len(teachers) > 1 else None
+    teacher2_name = teachers[1].name if len(teachers) > 1 else "Mrs. Johnson"
+
     meetings = [
-        models.Meeting(parent_id=new_user.id, teacher_name="Mr. Smith", date=datetime.utcnow() + timedelta(days=2), status="scheduled"),
-        models.Meeting(parent_id=new_user.id, teacher_name="Mrs. Johnson", date=datetime.utcnow() - timedelta(days=10), status="completed")
+        models.Meeting(parent_id=new_user.id, teacher_id=teacher1_id, teacher_name=teacher1_name, date=datetime.utcnow() + timedelta(days=2), status="scheduled"),
+        models.Meeting(parent_id=new_user.id, teacher_id=teacher2_id, teacher_name=teacher2_name, date=datetime.utcnow() - timedelta(days=10), status="completed")
     ]
     db.add_all(meetings)
     
@@ -79,6 +92,13 @@ def get_parent_meetings(db: Session, parent_id: int):
 def get_events(db: Session):
     return db.query(models.Event).all()
 
+def create_event(db: Session, event: schemas.EventCreate):
+    db_event = models.Event(**event.model_dump())
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
 def get_posts(db: Session):
     return db.query(models.Post).order_by(models.Post.created_at.desc()).all()
 
@@ -118,6 +138,8 @@ def update_profile(db: Session, user_id: int, data: schemas.ProfileUpdate):
         profile.age = data.age
     if data.bio is not None:
         profile.bio = data.bio
+    if data.preferred_language is not None:
+        profile.preferred_language = data.preferred_language
     db.commit()
     db.refresh(profile)
     return profile
@@ -242,3 +264,28 @@ def get_links(db: Session):
 
 def get_surveys(db: Session):
     return db.query(models.Survey).order_by(models.Survey.created_at.desc()).all()
+
+# --- Schools and Schedules ---
+
+def get_school_by_id(db: Session, school_id: int):
+    return db.query(models.School).filter(models.School.id == school_id).first()
+
+def get_teachers_by_school(db: Session, school_id: int):
+    return db.query(models.User).filter(
+        models.User.school_id == school_id,
+        models.User.role.in_(["teacher", "administration"])
+    ).all()
+
+def check_teacher_availability(db: Session, teacher_id: int, date: datetime):
+    start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    
+    meetings = db.query(models.Meeting).filter(
+        models.Meeting.teacher_id == teacher_id,
+        models.Meeting.date >= start_of_day,
+        models.Meeting.date < end_of_day,
+        models.Meeting.status == "scheduled"
+    ).all()
+    
+    # Basic logic: Return booked slots for the day
+    return meetings

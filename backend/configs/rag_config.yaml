@@ -1,0 +1,7 @@
+text_splitter:
+  chunk_size: 1000
+  chunk_overlap: 0
+embeddings:
+  model: "models/embedding-001"
+chroma:
+  persist_directory: "./chroma_db"

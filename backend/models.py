@@ -3,12 +3,23 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from database import Base
 
+class School(Base):
+    __tablename__ = "schools"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    city = Column(String)
+    description = Column(Text, nullable=True)
+    users = relationship("User", back_populates="school")
+    students = relationship("Student", back_populates="school")
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
-    role = Column(String, default="parent") # parent, teacher
+    role = Column(String, default="parent") # parent, teacher, administration
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=True)
+    school = relationship("School", back_populates="users")
     students = relationship("Student", back_populates="parent")
     posts = relationship("Post", back_populates="author")
     notifications = relationship("Notification", back_populates="user")
@@ -24,6 +35,7 @@ class Profile(Base):
     profession = Column(String, nullable=True)
     age = Column(Integer, nullable=True)
     bio = Column(Text, nullable=True)
+    preferred_language = Column(String, default="en")
     user = relationship("User", back_populates="profile")
 
 class Student(Base):
@@ -32,7 +44,9 @@ class Student(Base):
     name = Column(String)
     grade_level = Column(String)
     parent_id = Column(Integer, ForeignKey("users.id"))
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=True)
     parent = relationship("User", back_populates="students")
+    school = relationship("School", back_populates="students")
     grades = relationship("Grade", back_populates="student")
     timetable = relationship("Timetable", back_populates="student")
     homework = relationship("Homework", back_populates="student")
@@ -59,15 +73,23 @@ class Meeting(Base):
     __tablename__ = "meetings"
     id = Column(Integer, primary_key=True, index=True)
     parent_id = Column(Integer, ForeignKey("users.id"))
+    teacher_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     teacher_name = Column(String)
     date = Column(DateTime)
     status = Column(String, default="scheduled") # scheduled, completed, canceled
+    
+    parent = relationship("User", foreign_keys=[parent_id])
+    teacher = relationship("User", foreign_keys=[teacher_id])
 
 class Post(Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     content = Column(Text)
+    image_url = Column(String, nullable=True)
+    file_url = Column(String, nullable=True)
+    file_name = Column(String, nullable=True)
+    file_type = Column(String, nullable=True)
     author_id = Column(Integer, ForeignKey("users.id"))
     author = relationship("User", back_populates="posts")
     created_at = Column(DateTime, default=datetime.utcnow)

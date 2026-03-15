@@ -9,10 +9,54 @@ class AuthSyncRequest(BaseModel):
 class AuthSyncResponse(BaseModel):
     user_id: int
 
+class ChatRequest(BaseModel):
+    message: str
+    parent_id: int
+
+class ChatResponse(BaseModel):
+    reply: str
+
+class TranslateRequest(BaseModel):
+    email_text: str
+
+class TranslateResponse(BaseModel):
+    translated_summary: str
+
+class RewriteRequest(BaseModel):
+    text: str
+
+class RewriteResponse(BaseModel):
+    rewritten_text: str
+
+class TranslationRequest(BaseModel):
+    text: str
+    target_language: str
+
+class TranslationResponse(BaseModel):
+    translated_text: str
+
+class BatchTranslationRequest(BaseModel):
+    texts: list[str]
+    target_language: str
+
+class SchoolBase(BaseModel):
+    name: str
+    city: str
+    description: Optional[str] = None
+
+class SchoolCreate(SchoolBase):
+    pass
+
+class School(SchoolBase):
+    id: int
+    class Config:
+        from_attributes = True
+
 class UserBase(BaseModel):
     name: str
     email: str
     role: str = "parent"
+    school_id: Optional[int] = None
 
 class UserCreate(UserBase):
     pass
@@ -45,7 +89,7 @@ class Grade(GradeBase):
 class StudentBase(BaseModel):
     name: str
     grade_level: str
-    school_name: str
+    school_id: Optional[int] = None
 
 class Student(StudentBase):
     id: int
@@ -60,6 +104,9 @@ class EventBase(BaseModel):
     date: datetime
     location: str
 
+class EventCreate(EventBase):
+    pass
+
 class Event(EventBase):
     id: int
     class Config:
@@ -67,6 +114,7 @@ class Event(EventBase):
 
 class MeetingBase(BaseModel):
     teacher_name: str
+    teacher_id: Optional[int] = None
     date: datetime
     status: str
 
@@ -79,6 +127,15 @@ class Meeting(MeetingBase):
 class PostBase(BaseModel):
     title: str
     content: str
+    image_url: Optional[str] = None
+    file_url: Optional[str] = None
+    file_name: Optional[str] = None
+    file_type: Optional[str] = None
+
+class UploadResponse(BaseModel):
+    file_url: str
+    file_name: str
+    file_type: str
 
 class PostCreate(PostBase):
     author_id: int
@@ -110,6 +167,7 @@ class Post(PostBase):
     created_at: datetime
     author: User
     comments: List[Comment] = []
+    image_url: Optional[str] = None
     class Config:
         from_attributes = True
 
@@ -136,6 +194,7 @@ class ProfileBase(BaseModel):
     profession: Optional[str] = None
     age: Optional[int] = None
     bio: Optional[str] = None
+    preferred_language: Optional[str] = "en"
 
 class ProfileUpdate(ProfileBase):
     pass

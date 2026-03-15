@@ -4,11 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
+import { useLanguage } from "@/providers/language-provider";
 import { Search, MessageSquare, Save, CheckCircle2, User2, Pencil } from "lucide-react";
 import Link from "next/link";
 
 const API = "http://127.0.0.1:8000/api";
-type Profile = { id: number; user_id: number; profession: string | null; age: number | null; bio: string | null };
+type Profile = { id: number; user_id: number; profession: string | null; age: number | null; bio: string | null; preferred_language: string };
 type UserPublic = { id: number; name: string; email: string; role: string };
 
 const avatarColors = ["#7c6bff", "#4ecdc4", "#ff6b9d", "#ffd97d", "#a598ff"];
@@ -16,6 +17,7 @@ function getColor(seed: number) { return avatarColors[seed % avatarColors.length
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const queryClient = useQueryClient();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [profession, setProfession] = useState("");
   const [age, setAge] = useState("");
   const [bio, setBio] = useState("");
+  const [preferredLanguage, setPreferredLanguage] = useState("English");
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ["profile", user?.app_user_id],
@@ -33,6 +36,10 @@ export default function ProfilePage() {
       if (!profession) setProfession(d.profession || "");
       if (!age) setAge(d.age ? String(d.age) : "");
       if (!bio) setBio(d.bio || "");
+      if (d.preferred_language) {
+        setPreferredLanguage(d.preferred_language);
+        setLanguage(d.preferred_language);
+      }
       return d;
     },
     enabled: !!user?.app_user_id,
@@ -40,9 +47,15 @@ export default function ProfilePage() {
 
   const updateProfile = useMutation({
     mutationFn: async () => {
-      await axios.put(`${API}/profile/${user?.app_user_id}`, { profession, age: age ? parseInt(age) : null, bio });
+      await axios.put(`${API}/profile/${user?.app_user_id}`, { profession, age: age ? parseInt(age) : null, bio, preferred_language: preferredLanguage });
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["profile"] }); setSaveStatus("saved"); setEditing(false); setTimeout(() => setSaveStatus("idle"), 2000); },
+    onSuccess: () => {
+      setLanguage(preferredLanguage); // Instantly apply the language change app-wide
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setSaveStatus("saved");
+      setEditing(false);
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    },
   });
 
   const handleSearch = async () => {
@@ -64,7 +77,7 @@ export default function ProfilePage() {
       <div className="animate-fade-up" style={{ marginBottom: "28px" }}>
         <p className="section-label" style={{ marginBottom: "6px" }}>Account</p>
         <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--foreground)" }}>
-          My <span className="gradient-text">Profile</span>
+          My <span className="gradient-text">{t("profile")}</span>
         </h1>
       </div>
 
@@ -89,7 +102,7 @@ export default function ProfilePage() {
               color: editing ? "var(--primary)" : "var(--muted-foreground)",
               fontSize: "0.78rem", fontWeight: 500, transition: "all 0.15s",
             }}>
-              <Pencil size={12} /> {editing ? "Cancel" : "Edit Profile"}
+              <Pencil size={12} /> {editing ? "Cancel" : t("edit_profile")}
             </button>
           </div>
 
@@ -117,6 +130,21 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            <div>
+                <div className="section-label" style={{ marginBottom: "4px" }}>{t("preferred_language")}</div>
+                <select
+                  value={preferredLanguage}
+                  onChange={e => setPreferredLanguage(e.target.value)}
+                  style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)", outline: "none" }}
+                >
+                  <option value="English">English</option>
+                  <option value="German">Deutsch (German)</option>
+                  <option value="French">Français (French)</option>
+                  <option value="Spanish">Español (Spanish)</option>
+                  <option value="Arabic">العربية (Arabic)</option>
+                  <option value="Turkish">Türkçe (Turkish)</option>
+                </select>
+              </div>
               <div>
                 <div className="section-label" style={{ marginBottom: "4px" }}>Bio</div>
                 <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell the community about yourself…" rows={3} style={{ width: "100%", padding: "9px 12px", fontSize: "0.84rem", resize: "none", background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
@@ -124,7 +152,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button onClick={() => { setSaveStatus("saving"); updateProfile.mutate(); }} disabled={saveStatus === "saving"} className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 20px" }}>
                   {saveStatus === "saved" ? <CheckCircle2 size={15} /> : <Save size={15} />}
-                  {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved!" : "Save Profile"}
+                  {saveStatus === "saving" ? t("working_on_it") : saveStatus === "saved" ? "✓" : t("save_changes")}
                 </button>
               </div>
             </div>
@@ -133,6 +161,7 @@ export default function ProfilePage() {
               {[
                 { label: "Profession", value: profession || "—" },
                 { label: "Age", value: age || "—" },
+                { label: "Language", value: preferredLanguage },
                 { label: "School", value: "Lincoln Elementary" },
               ].map((item, i) => (
                 <div key={i} style={{ padding: "12px", borderRadius: "10px", background: "var(--background)", border: "1px solid var(--border)", opacity: 0.8 }}>

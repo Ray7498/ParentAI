@@ -1,49 +1,34 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import routers
-import agent
-import models
 from database import engine, Base
+import yaml
+import os
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "configs", "api_config.yaml")
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    API_CONFIG = yaml.safe_load(f)
 
 # Create all tables (including any new ones like notifications)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AI Parent Mentor API")
+app_config = API_CONFIG.get("app", {})
+app = FastAPI(title=app_config.get("title", "AI Parent Mentor API"), version=app_config.get("version", "1.0.0"))
 
+cors_config = API_CONFIG.get("cors", {})
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=cors_config.get("allow_origins", ["http://localhost:3000", "http://127.0.0.1:3000"]),
+    allow_credentials=cors_config.get("allow_credentials", True),
+    allow_methods=cors_config.get("allow_methods", ["*"]),
+    allow_headers=cors_config.get("allow_headers", ["*"]),
 )
 
 app.include_router(routers.router, prefix="/api")
 
-class ChatRequest(BaseModel):
-    message: str
-    parent_id: int
-
-class ChatResponse(BaseModel):
-    reply: str
-
-@app.post("/api/chat", response_model=ChatResponse)
-def handle_chat(request: ChatRequest):
-    reply = agent.process_chat(request.message, request.parent_id)
-    return ChatResponse(reply=reply)
-
-class TranslateRequest(BaseModel):
-    email_text: str
-
-class TranslateResponse(BaseModel):
-    translated_summary: str
-
-@app.post("/api/translate-email", response_model=TranslateResponse)
-def translate_email(request: TranslateRequest):
-    # Dummy implementation since full LLM pipeline isn't guaranteed to have keys
-    mock_reply = "This is a mock simplified translation of the school email. It says: Important announcement regarding the new schedule."
-    return TranslateResponse(translated_summary=mock_reply)
+os.makedirs("uploads", exist_ok=True)
+from fastapi.staticfiles import StaticFiles
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 def read_root():
